@@ -93,8 +93,9 @@ public class RenderingUtilities {
     }
 
     private static Stream<String> renderMethod(Method method, boolean inInterface, CompilationUnit compilationUnit) {
-        return addEmptyLine(methodRenderer.render(method, inInterface, compilationUnit).stream()
-                .map(RenderingUtilities::javaIndent));
+//        return addEmptyLine(methodRenderer.render(method, inInterface, compilationUnit).stream()
+//                .map(RenderingUtilities::javaIndent));
+		return methodRenderer.render(method, inInterface, compilationUnit).stream().map(RenderingUtilities::javaIndent);
     }
 
     private static Stream<String> addEmptyLine(Stream<String> in) {
