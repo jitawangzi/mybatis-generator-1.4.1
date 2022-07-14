@@ -49,10 +49,10 @@ public class DefaultCommentGenerator implements CommentGenerator {
 
     private boolean suppressDate;
 
-    private boolean suppressAllComments;
+	protected boolean suppressAllComments;
 
     /** If suppressAllComments is true, this option is ignored. */
-    private boolean addRemarkComments;
+	protected boolean addRemarkComments;
 
     private SimpleDateFormat dateFormat;
 
