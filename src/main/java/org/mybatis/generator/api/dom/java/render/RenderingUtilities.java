@@ -63,8 +63,10 @@ public class RenderingUtilities {
     }
 
     private static Stream<String> renderField(Field field, CompilationUnit compilationUnit) {
-        return addEmptyLine(fieldRenderer.render(field, compilationUnit).stream()
-                .map(RenderingUtilities::javaIndent));
+//        return addEmptyLine(fieldRenderer.render(field, compilationUnit).stream()
+//                .map(RenderingUtilities::javaIndent));
+    	// filed not add empty line
+		return fieldRenderer.render(field, compilationUnit).stream().map(RenderingUtilities::javaIndent);
     }
 
     public static List<String> renderInitializationBlocks(List<InitializationBlock> initializationBlocks) {
