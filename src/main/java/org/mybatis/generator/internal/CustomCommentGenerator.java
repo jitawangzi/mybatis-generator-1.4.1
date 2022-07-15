@@ -4,6 +4,7 @@ import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.java.Field;
 import org.mybatis.generator.api.dom.java.Method;
+import org.mybatis.generator.api.dom.java.TopLevelClass;
 import org.mybatis.generator.config.MergeConstants;
 import org.mybatis.generator.internal.util.StringUtility;
 
@@ -13,6 +14,21 @@ import org.mybatis.generator.internal.util.StringUtility;
  * @author SYQ
  */
 public class CustomCommentGenerator extends DefaultCommentGenerator {
+
+	// 表注释加到类注释里
+	@Override
+	public void addModelClassComment(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
+		if (suppressAllComments || !addRemarkComments) {
+			return;
+		}
+		String tableDesc = introspectedTable.getRemarks();
+		if (tableDesc != null && tableDesc.length() > 0) {
+
+			topLevelClass.addJavaDocLine("/**");
+			topLevelClass.addJavaDocLine(" * " + tableDesc);
+			topLevelClass.addJavaDocLine(" */");
+		}
+	}
 
 	/**
 	 * Database Column Remarks:
