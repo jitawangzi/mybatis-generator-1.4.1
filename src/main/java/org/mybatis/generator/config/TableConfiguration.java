@@ -93,12 +93,12 @@ public class TableConfiguration extends PropertyHolder {
 
         insertStatementEnabled = true;
         selectByPrimaryKeyStatementEnabled = true;
-        selectByExampleStatementEnabled = true;
+		selectByExampleStatementEnabled = false;
         updateByPrimaryKeyStatementEnabled = true;
         deleteByPrimaryKeyStatementEnabled = true;
-        deleteByExampleStatementEnabled = true;
-        countByExampleStatementEnabled = true;
-        updateByExampleStatementEnabled = true;
+		deleteByExampleStatementEnabled = false;
+		countByExampleStatementEnabled = false;
+		updateByExampleStatementEnabled = false;
     }
 
     public boolean isDeleteByPrimaryKeyStatementEnabled() {
