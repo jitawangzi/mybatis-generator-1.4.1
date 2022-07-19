@@ -1,3 +1,18 @@
+/*
+ *    Copyright ${license.git.copyrightYears} the original author or authors.
+ *
+ *    Licensed under the Apache License, Version 2.0 (the "License");
+ *    you may not use this file except in compliance with the License.
+ *    You may obtain a copy of the License at
+ *
+ *       http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *    Unless required by applicable law or agreed to in writing, software
+ *    distributed under the License is distributed on an "AS IS" BASIS,
+ *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *    See the License for the specific language governing permissions and
+ *    limitations under the License.
+ */
 package org.mybatis.generator.internal;
 
 import org.mybatis.generator.api.IntrospectedColumn;
@@ -10,8 +25,6 @@ import org.mybatis.generator.internal.util.StringUtility;
 
 /**
  * 自定义注释生成，修改的部分复写父类的方法
- * @date 2022年7月14日 下午5:09:12
- * @author SYQ
  */
 public class CustomCommentGenerator extends DefaultCommentGenerator {
 
@@ -40,15 +53,21 @@ public class CustomCommentGenerator extends DefaultCommentGenerator {
 	 * @mbg.generated
 	 */
 	//把默认的上面这种注释，换成下面这种在一行里的
-	/** @mbg.generated 数据库唯一id*/
+//	/** @mbg.generated 数据库唯一id*/\
+	// 不能放一行，合并生成时格式有问题。
 	@Override
 	public void addFieldComment(Field field, IntrospectedTable introspectedTable, IntrospectedColumn introspectedColumn) {
 		if (suppressAllComments) {
 			return;
 		}
 		StringBuffer comment = new StringBuffer() ;
-		comment.append("/** ").append(MergeConstants.NEW_ELEMENT_TAG).append(" ");
-
+//
+//		comment.append("/** ").append("\r\n").append(" * ").
+//		append(MergeConstants.NEW_ELEMENT_TAG).append("\r\n").append(" */");
+//
+//
+//		comment.append("/** ").append("\r\n").append(" * ").append(MergeConstants.NEW_ELEMENT_TAG).append(" ");
+//
 		String remarks = introspectedColumn.getRemarks();
 		if (addRemarkComments && StringUtility.stringHasValue(remarks)) {
 			String[] remarkLines = remarks.split(System.getProperty("line.separator")); //$NON-NLS-1$
@@ -59,17 +78,25 @@ public class CustomCommentGenerator extends DefaultCommentGenerator {
 				}
 			}
 		}
-		comment.append(" */") ;
+//		comment.append("\r\n");
+//		comment.append(" */") ;
+//
+//		field.addJavaDocLine(comment.toString()); //$NON-NLS-1$
 
-		field.addJavaDocLine(comment.toString()); //$NON-NLS-1$
+		field.addJavaDocLine("/**");
+		if (comment.length() > 0) {
+			field.addJavaDocLine(" * " + comment.toString());
+		}
+		addJavadocTag(field, false);
+		field.addJavaDocLine(" */");
+
 	}
 
 	@Override
 	public void addFieldComment(Field field, IntrospectedTable introspectedTable) {
-		if (suppressAllComments) {
-			return;
-		}
-		field.addJavaDocLine(emptyComment()); //$NON-NLS-1$
+		field.addJavaDocLine("/**");
+		addJavadocTag(field, false);
+		field.addJavaDocLine(" */");
 	}
 
 	// get方法的注释，
@@ -78,7 +105,9 @@ public class CustomCommentGenerator extends DefaultCommentGenerator {
 		if (suppressAllComments) {
 			return;
 		}
-		method.addJavaDocLine(emptyComment()); //$NON-NLS-1$
+		method.addJavaDocLine("/**");
+		addJavadocTag(method, false);
+		method.addJavaDocLine(" */");
 	}
 
 	@Override
@@ -89,10 +118,7 @@ public class CustomCommentGenerator extends DefaultCommentGenerator {
 	// mapper里面方法的注释
 	@Override
 	public void addGeneralMethodComment(Method method, IntrospectedTable introspectedTable) {
-		if (suppressAllComments) {
-			return;
-		}
-		method.addJavaDocLine(emptyComment()); //$NON-NLS-1$
+		addGetterComment(method, introspectedTable, null);
 	}
 
 	/**
@@ -101,7 +127,7 @@ public class CustomCommentGenerator extends DefaultCommentGenerator {
 	 */
 	private String emptyComment() {
 		StringBuffer comment = new StringBuffer();
-		comment.append("/** ").append(MergeConstants.NEW_ELEMENT_TAG).append(" */");
+		comment.append("/** ").append("\n").append(" * ").append(MergeConstants.NEW_ELEMENT_TAG).append("\n").append(" */");
 		return comment.toString();
 	}
 
