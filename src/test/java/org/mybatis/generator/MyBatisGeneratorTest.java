@@ -15,7 +15,8 @@
  */
 package org.mybatis.generator;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,14 +38,15 @@ class MyBatisGeneratorTest {
     void testGenerateMyBatis3WithInvalidConfig() throws Exception {
         List<String> warnings = new ArrayList<>();
         ConfigurationParser cp = new ConfigurationParser(warnings);
-        Configuration config = cp.parseConfiguration(this.getClass().getClassLoader().getResourceAsStream("generatorConfigMyBatis3_badConfig.xml"));
+		Configuration config = cp.parseConfiguration(this.getClass().getClassLoader().getResourceAsStream(
+				"dataServer-mybatorConfig.xml"));
 
         DefaultShellCallback shellCallback = new DefaultShellCallback(true);
 
         InvalidConfigurationException e =
                 assertThrows(InvalidConfigurationException.class, () -> {
                     MyBatisGenerator myBatisGenerator = new MyBatisGenerator(config, shellCallback, warnings);
-                    myBatisGenerator.generate(null, null, null, false);
+					myBatisGenerator.generate(null, null, null, true);
                 });
 
         assertEquals(2, e.getErrors().size());
