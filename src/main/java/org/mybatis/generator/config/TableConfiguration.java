@@ -50,6 +50,8 @@ public class TableConfiguration extends PropertyHolder {
 
     private final Map<IgnoredColumn, Boolean> ignoredColumns;
 
+	private final List<BlobTransformColumn> blobTransformColumns;
+
     private GeneratedKey generatedKey;
 
     private String selectByPrimaryKeyQueryId;
@@ -89,6 +91,7 @@ public class TableConfiguration extends PropertyHolder {
         this.modelType = context.getDefaultModelType();
 
         columnOverrides = new ArrayList<>();
+		blobTransformColumns = new ArrayList<>();
         ignoredColumns = new HashMap<>();
 
         insertStatementEnabled = true;
@@ -165,6 +168,9 @@ public class TableConfiguration extends PropertyHolder {
     public void addColumnOverride(ColumnOverride columnOverride) {
         columnOverrides.add(columnOverride);
     }
+	public void addBlobTransformColumn(BlobTransformColumn blobTransformColumn) {
+		blobTransformColumns.add(blobTransformColumn);
+	}
 
     @Override
     public boolean equals(Object obj) {
@@ -219,6 +225,14 @@ public class TableConfiguration extends PropertyHolder {
 
         return null;
     }
+	public BlobTransformColumn getBlobTransformColumn(String columnName) {
+		for (BlobTransformColumn bt : blobTransformColumns) {
+			if (columnName.equalsIgnoreCase(bt.getBlobColumn())) {
+				return bt;
+			}
+		}
+		return null;
+	}
 
     public Optional<GeneratedKey> getGeneratedKey() {
         return Optional.ofNullable(generatedKey);
@@ -307,14 +321,18 @@ public class TableConfiguration extends PropertyHolder {
         return columnOverrides;
     }
 
-    /**
-     * Returns a List of Strings. The values are the columns
-     * that were specified to be ignored in the table, but do not exist in the
-     * table.
-     *
-     * @return a List of Strings - the columns that were improperly configured
-     *         as ignored columns
-     */
+	public List<BlobTransformColumn> getBlobTransformColumns() {
+		return blobTransformColumns;
+	}
+
+	/**
+	 * Returns a List of Strings. The values are the columns
+	 * that were specified to be ignored in the table, but do not exist in the
+	 * table.
+	 *
+	 * @return a List of Strings - the columns that were improperly configured
+	 *         as ignored columns
+	 */
     public List<String> getIgnoredColumnsInError() {
         List<String> answer = new ArrayList<>();
 
@@ -414,6 +432,10 @@ public class TableConfiguration extends PropertyHolder {
         for (ColumnOverride columnOverride : columnOverrides) {
             columnOverride.validate(errors, fqTableName);
         }
+
+		for (BlobTransformColumn blobTransformColumn : blobTransformColumns) {
+			blobTransformColumn.validate(errors, fqTableName);
+		}
 
         for (IgnoredColumn ignoredColumn : ignoredColumns.keySet()) {
             ignoredColumn.validate(errors, fqTableName);

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-       Copyright ${license.git.copyrightYears} the original author or authors.
+       Copyright 2006-2022 the original author or authors.
 
        Licensed under the Apache License, Version 2.0 (the "License");
        you may not use this file except in compliance with the License.
@@ -149,7 +149,7 @@
   The table element is used to specify a database table that will be the source information
   for a set of generated objects.
 -->
-<!ELEMENT table (property*, generatedKey?, domainObjectRenamingRule?, columnRenamingRule?, (columnOverride | ignoreColumn | ignoreColumnsByRegex)*) >
+<!ELEMENT table (property*, generatedKey?, domainObjectRenamingRule?, columnRenamingRule?, (blobTransformColumn | columnOverride | ignoreColumn | ignoreColumnsByRegex)*) >
 <!ATTLIST table
   catalog CDATA #IMPLIED
   schema CDATA #IMPLIED
@@ -186,6 +186,12 @@
   typeHandler CDATA #IMPLIED
   isGeneratedAlways CDATA #IMPLIED
   delimitedColumnName CDATA #IMPLIED>
+
+<!ELEMENT blobTransformColumn EMPTY>
+<!ATTLIST blobTransformColumn
+  blobColumn CDATA #REQUIRED
+  domainObjectFieldType CDATA #REQUIRED
+  domainObjectFieldName CDATA #REQUIRED>
 
 <!--
   The ignoreColumn element is used to identify a column that should be ignored.

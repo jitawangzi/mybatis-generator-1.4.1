@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import org.mybatis.generator.config.BlobTransformColumn;
 import org.mybatis.generator.config.ColumnOverride;
 import org.mybatis.generator.config.ColumnRenamingRule;
 import org.mybatis.generator.config.CommentGeneratorConfiguration;
@@ -363,7 +364,9 @@ public class MyBatisGeneratorConfigurationParser {
                 parseProperty(tc, childNode);
             } else if ("columnOverride".equals(childNode.getNodeName())) { //$NON-NLS-1$
                 parseColumnOverride(tc, childNode);
-            } else if ("ignoreColumn".equals(childNode.getNodeName())) { //$NON-NLS-1$
+			} else if ("blobTransformColumn".equals(childNode.getNodeName())) { //$NON-NLS-1$
+				parseBlobTransformColumn(tc, childNode);
+			} else if ("ignoreColumn".equals(childNode.getNodeName())) { //$NON-NLS-1$
                 parseIgnoreColumn(tc, childNode);
             } else if ("ignoreColumnsByRegex".equals(childNode.getNodeName())) { //$NON-NLS-1$
                 parseIgnoreColumnByRegex(tc, childNode);
@@ -429,6 +432,18 @@ public class MyBatisGeneratorConfigurationParser {
 
         tc.addColumnOverride(co);
     }
+	private void parseBlobTransformColumn(TableConfiguration tc, Node node) {
+
+		Properties attributes = parseAttributes(node);
+		String blobColumn = attributes.getProperty("blobColumn"); //$NON-NLS-1$
+		if (!stringHasValue(blobColumn)) {
+			return;
+		}
+		String domainObjectFieldType = attributes.getProperty("domainObjectFieldType"); //$NON-NLS-1$
+		String domainObjectFieldName = attributes.getProperty("domainObjectFieldName"); //$NON-NLS-1$
+		BlobTransformColumn transformColumn = new BlobTransformColumn(blobColumn, domainObjectFieldType, domainObjectFieldName);
+		tc.addBlobTransformColumn(transformColumn);
+	}
 
     private void parseGeneratedKey(TableConfiguration tc, Node node) {
         Properties attributes = parseAttributes(node);

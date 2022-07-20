@@ -34,6 +34,7 @@
 
     <plugin type="org.mybatis.generator.plugins.SerializablePlugin" />
     <plugin type="org.mybatis.generator.plugins.SelectByIndexPlugin" />
+    <plugin type="org.mybatis.generator.plugins.BlobColumnTransformPlugin" />
 
 	<!-- 可以自定义CommentGenerator -->
     <commentGenerator type="org.mybatis.generator.internal.CustomCommentGenerator">
@@ -54,22 +55,26 @@
 <!--         <property name="enableSubPackages" value="true"/> -->
 <!--       </javaModelGenerator> -->
 
-    <javaModelGenerator targetPackage="ibatortest.generated.flat.java5.model"
+    <javaModelGenerator targetPackage="ibatortest"
         targetProject="target/generated-sources">
       <property name="enableSubPackages" value="true" />
       <property name="trimStrings" value="true" />
     </javaModelGenerator>
 
 
-    <sqlMapGenerator targetPackage="ibatortest.generated.flat.java5.model" targetProject="target/generated-sources" >
+    <sqlMapGenerator targetPackage="ibatortest" targetProject="target/generated-sources" >
    		 <property name="enableSubPackages" value="true" />
     </sqlMapGenerator>
-    <javaClientGenerator targetPackage="ibatortest.generated.flat.java5.model" targetProject="target/generated-sources" type="XMLMAPPER" />
-		<table tableName="%">
-		     <domainObjectRenamingRule searchString="^T" replaceString=""/>
-		</table>
+    <javaClientGenerator targetPackage="ibatortest" targetProject="target/generated-sources" type="XMLMAPPER" />
+<!-- 		<table tableName="%"> -->
+<!-- 		     <domainObjectRenamingRule searchString="^T" replaceString=""/> -->
+<!-- 		</table> -->
 		<table tableName="t_role_action"  domainObjectName="RoleAction" >
 			<property name="rootClass" value="cn.game.cache.entity.Player"/>
+		</table>
+		<table tableName="t_explore_map"  domainObjectName="ExploreMap" >
+			<blobTransformColumn blobColumn="layer_data" domainObjectFieldType="cn.game.net.game.module.explore.ExploreLayer" domainObjectFieldName="layer" />
+			<blobTransformColumn blobColumn="level_map" domainObjectFieldType="cn.game.net.game.module.explore.ExploreObjectContainer" domainObjectFieldName="objectContainer" />
 		</table>
 
   </context>

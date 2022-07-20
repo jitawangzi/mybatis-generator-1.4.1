@@ -58,7 +58,7 @@ public class DefaultCommentGenerator implements CommentGenerator {
 
     public DefaultCommentGenerator() {
         super();
-        suppressDate = false;
+		suppressDate = true;
         suppressAllComments = false;
         addRemarkComments = false;
     }

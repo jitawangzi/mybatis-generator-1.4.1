@@ -18,9 +18,9 @@ package org.mybatis.generator.internal;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.dom.java.Field;
+import org.mybatis.generator.api.dom.java.JavaElement;
 import org.mybatis.generator.api.dom.java.Method;
 import org.mybatis.generator.api.dom.java.TopLevelClass;
-import org.mybatis.generator.config.MergeConstants;
 import org.mybatis.generator.internal.util.StringUtility;
 
 /**
@@ -36,10 +36,7 @@ public class CustomCommentGenerator extends DefaultCommentGenerator {
 		}
 		String tableDesc = introspectedTable.getRemarks();
 		if (tableDesc != null && tableDesc.length() > 0) {
-
-			topLevelClass.addJavaDocLine("/**");
-			topLevelClass.addJavaDocLine(" * " + tableDesc);
-			topLevelClass.addJavaDocLine(" */");
+			addJavadoc(topLevelClass, tableDesc);
 		}
 	}
 
@@ -83,20 +80,15 @@ public class CustomCommentGenerator extends DefaultCommentGenerator {
 //
 //		field.addJavaDocLine(comment.toString()); //$NON-NLS-1$
 
-		field.addJavaDocLine("/**");
-		if (comment.length() > 0) {
-			field.addJavaDocLine(" * " + comment.toString());
-		}
-		addJavadocTag(field, false);
-		field.addJavaDocLine(" */");
-
+		addJavadoc(field, comment.toString());
 	}
 
 	@Override
 	public void addFieldComment(Field field, IntrospectedTable introspectedTable) {
-		field.addJavaDocLine("/**");
-		addJavadocTag(field, false);
-		field.addJavaDocLine(" */");
+//		field.addJavaDocLine("/**");
+//		addJavadocTag(field, false);
+//		field.addJavaDocLine(" */");
+		addDefaultJavadoc(field, false);
 	}
 
 	// get方法的注释，
@@ -105,30 +97,50 @@ public class CustomCommentGenerator extends DefaultCommentGenerator {
 		if (suppressAllComments) {
 			return;
 		}
-		method.addJavaDocLine("/**");
-		addJavadocTag(method, false);
-		method.addJavaDocLine(" */");
+		addDefaultJavadoc(method, false);
 	}
 
 	@Override
 	public void addSetterComment(Method method, IntrospectedTable introspectedTable, IntrospectedColumn introspectedColumn) {
-		addGetterComment(method, introspectedTable, introspectedColumn);
+		if (suppressAllComments) {
+			return;
+		}
+		addDefaultJavadoc(method, false);
 	}
 
 	// mapper里面方法的注释
 	@Override
 	public void addGeneralMethodComment(Method method, IntrospectedTable introspectedTable) {
-		addGetterComment(method, introspectedTable, null);
+		if (suppressAllComments) {
+			return;
+		}
+		addDefaultJavadoc(method, false);
 	}
 
+	@Override
+	public void addJavadocTag(JavaElement javaElement, boolean markAsDoNotDelete) {
+		super.addJavadocTag(javaElement, markAsDoNotDelete);
+	}
 	/**
-	 * 获取一个空的注释内容
-	 * @return
+	 * 增加默认的注释
+	 * @param javaElement
+	 * @param markAsDoNotDelete
 	 */
-	private String emptyComment() {
-		StringBuffer comment = new StringBuffer();
-		comment.append("/** ").append("\n").append(" * ").append(MergeConstants.NEW_ELEMENT_TAG).append("\n").append(" */");
-		return comment.toString();
+	public void addDefaultJavadoc(JavaElement javaElement, boolean markAsDoNotDelete) {
+		addJavadoc(javaElement, null);
+	}
+	/**
+	 * 增加注释
+	 * @param javaElement
+	 */
+	public void addJavadoc(JavaElement javaElement, String remark) {
+
+		javaElement.addJavaDocLine("/**");
+		if (remark != null && remark.length() > 0) {
+			javaElement.addJavaDocLine(" * " + remark);
+		}
+		addJavadocTag(javaElement, false);
+		javaElement.addJavaDocLine(" */");
 	}
 
 }
