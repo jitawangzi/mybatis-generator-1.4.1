@@ -88,6 +88,8 @@ public class Context extends PropertyHolder {
 
     private XmlFormatter xmlFormatter;
 
+	private List<String> notUpdateColumns;
+
     public Context(ModelType defaultModelType) {
         super();
 
@@ -246,6 +248,12 @@ public class Context extends PropertyHolder {
         } else if (PropertyRegistry.CONTEXT_AUTO_DELIMIT_KEYWORDS.equals(name)
                 && stringHasValue(value)) {
             autoDelimitKeywords = isTrue(value);
+		} else if (name.equals("notUpdateColumns") && stringHasValue(value)) {
+			notUpdateColumns = new ArrayList<>();
+			String[] split = value.split(",");
+			for (String string : split) {
+				notUpdateColumns.add(string);
+			}
         }
     }
 
@@ -534,4 +542,9 @@ public class Context extends PropertyHolder {
     public void setConnectionFactoryConfiguration(ConnectionFactoryConfiguration connectionFactoryConfiguration) {
         this.connectionFactoryConfiguration = connectionFactoryConfiguration;
     }
+
+	public List<String> getNotUpdateColumns() {
+		return notUpdateColumns;
+	}
+
 }

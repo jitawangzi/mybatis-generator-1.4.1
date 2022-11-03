@@ -32,6 +32,9 @@
     <property name="beginningDelimiter" value="`"/>
     <property name="endingDelimiter" value="`"/>
 
+	<!-- xml中生成update语句时，不更新的列。  -->
+    <property name="notUpdateColumns" value="player_id"/>
+
     <plugin type="org.mybatis.generator.plugins.SerializablePlugin" />
     <plugin type="org.mybatis.generator.plugins.SelectByIndexPlugin" />
     <plugin type="org.mybatis.generator.plugins.BlobColumnTransformPlugin" />
@@ -69,12 +72,18 @@
 <!-- 		<table tableName="%"> -->
 <!-- 		     <domainObjectRenamingRule searchString="^T" replaceString=""/> -->
 <!-- 		</table> -->
-		<table tableName="t_role_action"  domainObjectName="RoleAction" >
-			<property name="rootClass" value="cn.game.cache.entity.Player"/>
+<!-- 		<table tableName="t_role_action"  domainObjectName="RoleAction" > -->
+<!-- 			<property name="rootClass" value="cn.game.cache.entity.Player"/> -->
+<!-- 		</table> -->
+<!-- 		<table tableName="t_explore_map"  domainObjectName="ExploreMap" > -->
+<!-- 			<blobTransformColumn blobColumn="layer_data" domainObjectFieldType="cn.game.net.game.module.explore.ExploreLayer" domainObjectFieldName="layer" /> -->
+<!-- 			<blobTransformColumn blobColumn="level_map" domainObjectFieldType="cn.game.net.game.module.explore.ExploreObjectContainer" domainObjectFieldName="objectContainer" /> -->
+<!-- 		</table> -->
+
+		<table tableName="t_buff"  domainObjectName="Buff" >
 		</table>
-		<table tableName="t_explore_map"  domainObjectName="ExploreMap" >
-			<blobTransformColumn blobColumn="layer_data" domainObjectFieldType="cn.game.net.game.module.explore.ExploreLayer" domainObjectFieldName="layer" />
-			<blobTransformColumn blobColumn="level_map" domainObjectFieldType="cn.game.net.game.module.explore.ExploreObjectContainer" domainObjectFieldName="objectContainer" />
+		<table tableName="t_chip"  domainObjectName="Chip" >
+		    <property name="notUpdateColumns" value="role_id,dict_id"/>
 		</table>
 
   </context>

@@ -335,6 +335,11 @@ public abstract class AbstractXmlElementGenerator extends AbstractGenerator {
         while (iter.hasNext()) {
             IntrospectedColumn introspectedColumn = iter.next();
 
+			// 过滤不生成update的列
+			if (isNotUpdateColumn(introspectedColumn)) {
+				continue;
+			}
+
             sb.append(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn));
             sb.append(" = "); //$NON-NLS-1$
             sb.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn));
@@ -356,4 +361,29 @@ public abstract class AbstractXmlElementGenerator extends AbstractGenerator {
 
         return answer;
     }
+	/**
+	 * 是否在更新时不更新这个列
+	 * @param introspectedColumn
+	 * @return
+	 */
+	protected boolean isNotUpdateColumn(IntrospectedColumn introspectedColumn) {
+		// 过滤不生成update的列
+		String tableConfigurationProperty = introspectedColumn.getIntrospectedTable().getTableConfigurationProperty("notUpdateColumns");
+		if (tableConfigurationProperty != null) {
+			String[] split = tableConfigurationProperty.split(",");
+			for (String string : split) {
+				if (string.equals(introspectedColumn.getActualColumnName())) {
+					return true;
+				}
+			}
+		} else {
+			List<String> notUpdateColumns = context.getNotUpdateColumns();
+			if (notUpdateColumns != null && !notUpdateColumns.isEmpty()) {
+				if (notUpdateColumns.contains(introspectedColumn.getActualColumnName())) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 }

@@ -58,6 +58,12 @@ public class UpdateByPrimaryKeySelectiveElementGenerator extends AbstractXmlElem
 
         for (IntrospectedColumn introspectedColumn :
                 ListUtilities.removeGeneratedAlwaysColumns(introspectedTable.getNonPrimaryKeyColumns())) {
+
+					// 过滤不生成update的列
+					if (isNotUpdateColumn(introspectedColumn)) {
+						continue;
+					}
+
             sb.setLength(0);
             sb.append(introspectedColumn.getJavaProperty());
             sb.append(" != null"); //$NON-NLS-1$
