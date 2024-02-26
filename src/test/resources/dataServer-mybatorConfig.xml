@@ -84,9 +84,9 @@
 
 		<table tableName="t_buff"  domainObjectName="Buff" >
 		</table>
-		<table tableName="t_hero"  domainObjectName="Hero" >
-		    <property name="rootClass" value="ibatortest.Buff" />
-		    <blobTransformColumn blobColumn="skills_used" domainObjectFieldType="java.util.HashSet&lt;Integer&gt;" domainObjectFieldName="skillsUsedSet" />
+		<table tableName="t_player_ext"  domainObjectName="PlayerExt" >
+		    <blobTransformColumn blobColumn="technology_tree_node" domainObjectFieldType="java.util.HashSet&lt;Integer&gt;" domainObjectFieldName="technology_tree_nodeSet" />
+		    <blobTransformColumn blobColumn="main_city_buffs" domainObjectFieldType="java.util.HashSet&lt;Integer&gt;" domainObjectFieldName="main_city_buffsSet" />
 		</table>
 
   </context>

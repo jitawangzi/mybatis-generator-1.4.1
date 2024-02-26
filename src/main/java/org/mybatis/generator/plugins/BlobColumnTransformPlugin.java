@@ -105,7 +105,7 @@ public class BlobColumnTransformPlugin extends PluginAdapter {
 			} else {
 				// byte[]
 				String fieldName = introspectedColumn.getJavaProperty();
-				body = String.format("if (%s != null && %s.length > 0) {\r\n" + "			this.%s = (%s) util.KryoUtils\r\n"
+				body = String.format("if (%s != null && %s.length > 0) {\r\n" + "			this.%s = (%s) cn.game.util.KryoUtils\r\n"
 						+ "					.deserializeClassAndObjectWithVersion(%s);\r\n" + "		}\r\n"
 						+ "		if (this.%s == null) {\r\n"
 						+ "			this.%s = new %s();\r\n"
@@ -119,39 +119,38 @@ public class BlobColumnTransformPlugin extends PluginAdapter {
 		return true;
 	}
 
-//	@Override
-//	public boolean modelGetterMethodGenerated(Method method, TopLevelClass topLevelClass, IntrospectedColumn introspectedColumn,
-//			IntrospectedTable introspectedTable, ModelClassType modelClassType) {
-//
-//		BlobTransformColumn blobTransformColumn = introspectedTable.getTableConfiguration().getBlobTransformColumn(introspectedColumn
-//				.getActualColumnName());
-//		if (blobTransformColumn == null) {
-//			return true;
-//		}
-//		String domainObjectFieldName = blobTransformColumn.getDomainObjectFieldName();
-//		String domainObjectFieldType = blobTransformColumn.getDomainObjectFieldType();
-//		String blobColumn = blobTransformColumn.getBlobColumn();
-//		// 修改blob列get方法内容，做业务对象之间的转换
-//		if (introspectedColumn.getActualColumnName().equals(blobColumn)) {
-//			// 修改get方法
-//			String body;
-//			boolean isText = introspectedColumn.getFullyQualifiedJavaType().getFullyQualifiedNameWithoutTypeParameters()
-//					.equalsIgnoreCase("java.lang.String");
-//			if (isText) {
-//				// 默认json string
-//				body = String.format(
-//						"return com.alibaba.fastjson.JSON.toJSONString(this.%s, com.alibaba.fastjson.serializer.SerializerFeature.WriteNonStringKeyAsString);",
-//						domainObjectFieldName);
-//			} else {
-//				// byte[]
-//				body = String.format("return util.KryoUtils.serializeClassAndObjectWithVersion(this.%s);\r\n",
-//						domainObjectFieldName);
-//			}
-//			method.getBodyLines().clear();
-//			method.addBodyLine(body);
-//		}
-//		return true;
-//	}
+	@Override
+	public boolean modelGetterMethodGenerated(Method method, TopLevelClass topLevelClass,
+			IntrospectedColumn introspectedColumn, IntrospectedTable introspectedTable, ModelClassType modelClassType) {
+
+		BlobTransformColumn blobTransformColumn = introspectedTable.getTableConfiguration()
+				.getBlobTransformColumn(introspectedColumn.getActualColumnName());
+		if (blobTransformColumn == null) {
+			return true;
+		}
+		String blobColumn = blobTransformColumn.getBlobColumn();
+		// 修改blob列get方法内容，做业务对象之间的转换
+		if (introspectedColumn.getActualColumnName().equals(blobColumn)) {
+			boolean isText = introspectedColumn.getFullyQualifiedJavaType().getFullyQualifiedNameWithoutTypeParameters()
+					.equalsIgnoreCase("java.lang.String");
+			String body;
+			if (isText) {
+				// 默认json string
+				// 修改get方法
+				body = String.format("if (%s == null || %s.isEmpty()) {\r\n"
+				+ "			beforeSave();\r\n"
+				+ "		}",introspectedColumn.getJavaProperty(),introspectedColumn.getJavaProperty());
+			} else {
+				// byte[]
+				// 修改get方法
+				body = String.format("if (%s == null) {\r\n"
+				+ "			beforeSave();\r\n"
+				+ "		}",introspectedColumn.getJavaProperty());
+			}
+			method.addBodyLine(0, body);
+		}
+		return true;
+	}
 
 	@Override
 	public boolean modelBaseRecordClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
@@ -192,7 +191,7 @@ public class BlobColumnTransformPlugin extends PluginAdapter {
 						introspectedColumn.getJavaProperty(), blobTransformColumn.getDomainObjectFieldName());
 			} else {
 				// byte[]
-				body = String.format("this.%s =  util.KryoUtils.serializeClassAndObjectWithVersion(this.%s);\r\n",
+				body = String.format("this.%s =  cn.game.util.KryoUtils.serializeClassAndObjectWithVersion(this.%s);\r\n",
 						introspectedColumn.getJavaProperty(), blobTransformColumn.getDomainObjectFieldName());
 			}
 			beforeSaveMethod.addBodyLine(body);
