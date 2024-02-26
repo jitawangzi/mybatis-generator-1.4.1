@@ -57,7 +57,7 @@ public class CustomCommentGenerator extends DefaultCommentGenerator {
 		if (suppressAllComments) {
 			return;
 		}
-		StringBuffer comment = new StringBuffer() ;
+		StringBuilder comment = new StringBuilder();
 //
 //		comment.append("/** ").append("\r\n").append(" * ").
 //		append(MergeConstants.NEW_ELEMENT_TAG).append("\r\n").append(" */");

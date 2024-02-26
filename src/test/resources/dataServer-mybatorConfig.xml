@@ -38,6 +38,8 @@
     <plugin type="org.mybatis.generator.plugins.SerializablePlugin" />
     <plugin type="org.mybatis.generator.plugins.SelectByIndexPlugin" />
     <plugin type="org.mybatis.generator.plugins.BlobColumnTransformPlugin" />
+    <plugin type="org.mybatis.generator.plugins.DbEntityInterfacePlugin" />
+    <plugin type="org.mybatis.generator.plugins.RootClassProtectedFieldPlugin" />
 
 	<!-- 可以自定义CommentGenerator -->
     <commentGenerator type="org.mybatis.generator.internal.CustomCommentGenerator">
@@ -82,8 +84,9 @@
 
 		<table tableName="t_buff"  domainObjectName="Buff" >
 		</table>
-		<table tableName="t_chip"  domainObjectName="Chip" >
-		    <property name="notUpdateColumns" value="role_id,dict_id"/>
+		<table tableName="t_hero"  domainObjectName="Hero" >
+		    <property name="rootClass" value="ibatortest.Buff" />
+		    <blobTransformColumn blobColumn="skills_used" domainObjectFieldType="java.util.HashSet&lt;Integer&gt;" domainObjectFieldName="skillsUsedSet" />
 		</table>
 
   </context>

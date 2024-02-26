@@ -119,38 +119,87 @@ public class BlobColumnTransformPlugin extends PluginAdapter {
 		return true;
 	}
 
-	@Override
-	public boolean modelGetterMethodGenerated(Method method, TopLevelClass topLevelClass, IntrospectedColumn introspectedColumn,
-			IntrospectedTable introspectedTable, ModelClassType modelClassType) {
+//	@Override
+//	public boolean modelGetterMethodGenerated(Method method, TopLevelClass topLevelClass, IntrospectedColumn introspectedColumn,
+//			IntrospectedTable introspectedTable, ModelClassType modelClassType) {
+//
+//		BlobTransformColumn blobTransformColumn = introspectedTable.getTableConfiguration().getBlobTransformColumn(introspectedColumn
+//				.getActualColumnName());
+//		if (blobTransformColumn == null) {
+//			return true;
+//		}
+//		String domainObjectFieldName = blobTransformColumn.getDomainObjectFieldName();
+//		String domainObjectFieldType = blobTransformColumn.getDomainObjectFieldType();
+//		String blobColumn = blobTransformColumn.getBlobColumn();
+//		// 修改blob列get方法内容，做业务对象之间的转换
+//		if (introspectedColumn.getActualColumnName().equals(blobColumn)) {
+//			// 修改get方法
+//			String body;
+//			boolean isText = introspectedColumn.getFullyQualifiedJavaType().getFullyQualifiedNameWithoutTypeParameters()
+//					.equalsIgnoreCase("java.lang.String");
+//			if (isText) {
+//				// 默认json string
+//				body = String.format(
+//						"return com.alibaba.fastjson.JSON.toJSONString(this.%s, com.alibaba.fastjson.serializer.SerializerFeature.WriteNonStringKeyAsString);",
+//						domainObjectFieldName);
+//			} else {
+//				// byte[]
+//				body = String.format("return util.KryoUtils.serializeClassAndObjectWithVersion(this.%s);\r\n",
+//						domainObjectFieldName);
+//			}
+//			method.getBodyLines().clear();
+//			method.addBodyLine(body);
+//		}
+//		return true;
+//	}
 
-		BlobTransformColumn blobTransformColumn = introspectedTable.getTableConfiguration().getBlobTransformColumn(introspectedColumn
-				.getActualColumnName());
-		if (blobTransformColumn == null) {
-			return true;
-		}
-		String domainObjectFieldName = blobTransformColumn.getDomainObjectFieldName();
-		String domainObjectFieldType = blobTransformColumn.getDomainObjectFieldType();
-		String blobColumn = blobTransformColumn.getBlobColumn();
-		// 修改blob列get方法内容，做业务对象之间的转换
-		if (introspectedColumn.getActualColumnName().equals(blobColumn)) {
-			// 修改get方法
-			String body;
-			boolean isText = introspectedColumn.getFullyQualifiedJavaType().getFullyQualifiedNameWithoutTypeParameters()
-					.equalsIgnoreCase("java.lang.String");
-			if (isText) {
-				// 默认json string
-				body = String.format(
-						"return com.alibaba.fastjson.JSON.toJSONString(this.%s, com.alibaba.fastjson.serializer.SerializerFeature.WriteNonStringKeyAsString);",
-						domainObjectFieldName);
-			} else {
-				// byte[]
-				body = String.format("return util.KryoUtils.serializeClassAndObjectWithVersion(this.%s);\r\n",
-						domainObjectFieldName);
-			}
-			method.getBodyLines().clear();
-			method.addBodyLine(body);
-		}
+	@Override
+	public boolean modelBaseRecordClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
+		setBlob(topLevelClass, introspectedTable);
 		return true;
 	}
 
+	@Override
+	public boolean modelPrimaryKeyClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
+		setBlob(topLevelClass, introspectedTable);
+		return true;
+	}
+
+	private void setBlob(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
+		List<BlobTransformColumn> blobTransformColumns = introspectedTable.getTableConfiguration()
+				.getBlobTransformColumns();
+		if (blobTransformColumns == null || blobTransformColumns.isEmpty()) {
+			return;
+		}
+
+		Method beforeSaveMethod = new Method("beforeSave");
+		beforeSaveMethod.addAnnotation("@Override");
+		beforeSaveMethod.setAbstract(false);
+		beforeSaveMethod.setVisibility(JavaVisibility.PUBLIC);
+		beforeSaveMethod.setReturnType(new FullyQualifiedJavaType("void"));
+
+		for (BlobTransformColumn blobTransformColumn : blobTransformColumns) {
+
+			IntrospectedColumn introspectedColumn = introspectedTable.getColumn(blobTransformColumn.getBlobColumn())
+					.get();
+			String body;
+			boolean isText = introspectedColumn.getFullyQualifiedJavaType()
+							.getFullyQualifiedNameWithoutTypeParameters().equalsIgnoreCase("java.lang.String");
+			if (isText) {
+				// 默认json string
+				body = String.format(
+						"this.%s = com.alibaba.fastjson.JSON.toJSONString(this.%s, com.alibaba.fastjson.serializer.SerializerFeature.WriteNonStringKeyAsString);",
+						introspectedColumn.getJavaProperty(), blobTransformColumn.getDomainObjectFieldName());
+			} else {
+				// byte[]
+				body = String.format("this.%s =  util.KryoUtils.serializeClassAndObjectWithVersion(this.%s);\r\n",
+						introspectedColumn.getJavaProperty(), blobTransformColumn.getDomainObjectFieldName());
+			}
+			beforeSaveMethod.addBodyLine(body);
+		}
+		CustomCommentGenerator generator = new CustomCommentGenerator();
+		generator.addDefaultJavadoc(beforeSaveMethod, false);
+
+		topLevelClass.addMethod(beforeSaveMethod);
+	}
 }

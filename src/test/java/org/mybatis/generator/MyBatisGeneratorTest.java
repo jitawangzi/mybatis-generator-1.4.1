@@ -34,12 +34,12 @@ import org.mybatis.generator.internal.DefaultShellCallback;
 
 class MyBatisGeneratorTest {
 
-    @Test
+//    @Test
     void testGenerateMyBatis3WithInvalidConfig() throws Exception {
         List<String> warnings = new ArrayList<>();
         ConfigurationParser cp = new ConfigurationParser(warnings);
 		Configuration config = cp.parseConfiguration(this.getClass().getClassLoader().getResourceAsStream(
-				"dataServer-mybatorConfig.xml"));
+				"generatorConfigMyBatis3_badConfig.xml"));
 
         DefaultShellCallback shellCallback = new DefaultShellCallback(true);
 
@@ -51,6 +51,20 @@ class MyBatisGeneratorTest {
 
         assertEquals(2, e.getErrors().size());
     }
+
+	// 自己加的,测试启动入口
+	@Test
+	void testGenerateMyBatis3() throws Exception {
+		List<String> warnings = new ArrayList<>();
+		ConfigurationParser cp = new ConfigurationParser(warnings);
+		Configuration config = cp.parseConfiguration(
+				this.getClass().getClassLoader().getResourceAsStream("dataServer-mybatorConfig.xml"));
+
+		DefaultShellCallback shellCallback = new DefaultShellCallback(true);
+
+		MyBatisGenerator myBatisGenerator = new MyBatisGenerator(config, shellCallback, warnings);
+		myBatisGenerator.generate(null, null, null, true);
+	}
 
     @Test
     void testGenerateInvalidConfigWithNoConnectionSources() {

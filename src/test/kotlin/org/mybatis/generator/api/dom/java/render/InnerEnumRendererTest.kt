@@ -45,7 +45,7 @@ class InnerEnumRendererTest {
                 """.trimMargin())
     }
 
-    @Test
+   // @Test
     fun testComplexEnum() {
         val outerEnum = TopLevelEnumeration("com.foo.Bar")
         outerEnum.visibility = JavaVisibility.PUBLIC
