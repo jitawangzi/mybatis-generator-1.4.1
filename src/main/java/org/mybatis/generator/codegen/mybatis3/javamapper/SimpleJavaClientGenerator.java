@@ -32,6 +32,7 @@ import org.mybatis.generator.codegen.AbstractXmlGenerator;
 import org.mybatis.generator.codegen.mybatis3.javamapper.elements.AbstractJavaMapperMethodGenerator;
 import org.mybatis.generator.codegen.mybatis3.javamapper.elements.DeleteByPrimaryKeyMethodGenerator;
 import org.mybatis.generator.codegen.mybatis3.javamapper.elements.InsertMethodGenerator;
+import org.mybatis.generator.codegen.mybatis3.javamapper.elements.InsertOrUpdateMethodGenerator;
 import org.mybatis.generator.codegen.mybatis3.javamapper.elements.SelectAllMethodGenerator;
 import org.mybatis.generator.codegen.mybatis3.javamapper.elements.SelectByPrimaryKeyMethodGenerator;
 import org.mybatis.generator.codegen.mybatis3.javamapper.elements.UpdateByPrimaryKeyWithoutBLOBsMethodGenerator;
@@ -103,6 +104,13 @@ public class SimpleJavaClientGenerator extends AbstractJavaClientGenerator {
             initializeAndExecuteGenerator(methodGenerator, interfaze);
         }
     }
+
+	protected void addInsertOrUpdateMethod(Interface interfaze) {
+		if (introspectedTable.getRules().generateInsert()) {
+			AbstractJavaMapperMethodGenerator methodGenerator = new InsertOrUpdateMethodGenerator(true);
+			initializeAndExecuteGenerator(methodGenerator, interfaze);
+		}
+	}
 
     protected void addSelectByPrimaryKeyMethod(Interface interfaze) {
         if (introspectedTable.getRules().generateSelectByPrimaryKey()) {

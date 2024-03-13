@@ -60,7 +60,7 @@ public class UpdateByPrimaryKeySelectiveElementGenerator extends AbstractXmlElem
                 ListUtilities.removeGeneratedAlwaysColumns(introspectedTable.getNonPrimaryKeyColumns())) {
 
 					// 过滤不生成update的列
-					if (isNotUpdateColumn(introspectedColumn)) {
+					if (context.isNotUpdateColumn(introspectedColumn)) {
 						continue;
 					}
 

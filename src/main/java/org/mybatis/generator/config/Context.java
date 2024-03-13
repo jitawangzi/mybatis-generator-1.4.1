@@ -32,6 +32,7 @@ import org.mybatis.generator.api.GeneratedFile;
 import org.mybatis.generator.api.GeneratedJavaFile;
 import org.mybatis.generator.api.GeneratedKotlinFile;
 import org.mybatis.generator.api.GeneratedXmlFile;
+import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.JavaFormatter;
 import org.mybatis.generator.api.JavaTypeResolver;
@@ -545,6 +546,33 @@ public class Context extends PropertyHolder {
 
 	public List<String> getNotUpdateColumns() {
 		return notUpdateColumns;
+	}
+
+	/**
+	 * 是否在更新时不更新这个列
+	 * @param introspectedColumn
+	 * @return
+	 */
+	public boolean isNotUpdateColumn(IntrospectedColumn introspectedColumn) {
+		// 过滤不生成update的列
+		String tableConfigurationProperty = introspectedColumn.getIntrospectedTable()
+				.getTableConfigurationProperty("notUpdateColumns");
+		if (tableConfigurationProperty != null) {
+			String[] split = tableConfigurationProperty.split(",");
+			for (String string : split) {
+				if (string.equals(introspectedColumn.getActualColumnName())) {
+					return true;
+				}
+			}
+		} else {
+			List<String> notUpdateColumns = this.getNotUpdateColumns();
+			if (notUpdateColumns != null && !notUpdateColumns.isEmpty()) {
+				if (notUpdateColumns.contains(introspectedColumn.getActualColumnName())) {
+					return true;
+				}
+			}
+		}
+		return false;
 	}
 
 }

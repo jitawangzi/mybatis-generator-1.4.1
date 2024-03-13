@@ -41,6 +41,7 @@
     <plugin type="org.mybatis.generator.plugins.DbEntityInterfacePlugin" />
     <plugin type="org.mybatis.generator.plugins.RootClassProtectedFieldPlugin" />
     <plugin type="org.mybatis.generator.plugins.BatchInsertPlugin" />
+    <plugin type="org.mybatis.generator.plugins.InsertOrUpdatePlugin" />
 
 	<!-- 可以自定义CommentGenerator -->
     <commentGenerator type="org.mybatis.generator.internal.CustomCommentGenerator">

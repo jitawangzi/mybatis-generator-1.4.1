@@ -62,6 +62,15 @@ public abstract class BaseRules implements Rules {
         return tableConfiguration.isInsertStatementEnabled();
     }
 
+	@Override
+	public boolean generateInsertOrUpdate() {
+		if (isModelOnly) {
+			return false;
+		}
+
+		return tableConfiguration.isInsertOrUpdateStatementEnabled();
+	}
+
     /**
      * Implements the rule for generating the insert selective SQL Map element
      * and DAO method. If the insert statement is allowed, then generate the

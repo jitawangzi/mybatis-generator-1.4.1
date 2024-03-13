@@ -726,6 +726,11 @@ public interface Plugin {
         return true;
     }
 
+	default boolean clientInsertOrUpdateMethodGenerated(Method method, Interface interfaze,
+			IntrospectedTable introspectedTable) {
+		return true;
+	}
+
     default boolean clientInsertMethodGenerated(KotlinFunction kotlinFunction, KotlinFile kotlinFile,
             IntrospectedTable introspectedTable) {
         return true;

@@ -32,6 +32,8 @@ public class TableConfiguration extends PropertyHolder {
 
     private boolean insertStatementEnabled;
 
+	private boolean insertOrUpdateStatementEnabled;
+
     private boolean selectByPrimaryKeyStatementEnabled;
 
     private boolean selectByExampleStatementEnabled;
@@ -95,6 +97,7 @@ public class TableConfiguration extends PropertyHolder {
         ignoredColumns = new HashMap<>();
 
         insertStatementEnabled = true;
+		insertOrUpdateStatementEnabled = true;
         selectByPrimaryKeyStatementEnabled = true;
 		selectByExampleStatementEnabled = false;
         updateByPrimaryKeyStatementEnabled = true;
@@ -117,9 +120,17 @@ public class TableConfiguration extends PropertyHolder {
         return insertStatementEnabled;
     }
 
-    public void setInsertStatementEnabled(boolean insertStatementEnabled) {
-        this.insertStatementEnabled = insertStatementEnabled;
-    }
+	public void setInsertStatementEnabled(boolean insertStatementEnabled) {
+		this.insertStatementEnabled = insertStatementEnabled;
+	}
+
+	public boolean isInsertOrUpdateStatementEnabled() {
+		return insertOrUpdateStatementEnabled;
+	}
+
+	public void setInsertOrUpdateStatementEnabled(boolean insertOrUpdateStatementEnabled) {
+		this.insertOrUpdateStatementEnabled = insertOrUpdateStatementEnabled;
+	}
 
     public boolean isSelectByPrimaryKeyStatementEnabled() {
         return selectByPrimaryKeyStatementEnabled;
@@ -266,6 +277,7 @@ public class TableConfiguration extends PropertyHolder {
     public boolean areAnyStatementsEnabled() {
         return selectByExampleStatementEnabled
                 || selectByPrimaryKeyStatementEnabled || insertStatementEnabled
+				|| insertOrUpdateStatementEnabled
                 || updateByPrimaryKeyStatementEnabled
                 || deleteByExampleStatementEnabled
                 || deleteByPrimaryKeyStatementEnabled

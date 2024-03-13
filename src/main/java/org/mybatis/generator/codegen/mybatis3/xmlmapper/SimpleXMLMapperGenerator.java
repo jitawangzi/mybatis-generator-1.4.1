@@ -26,6 +26,7 @@ import org.mybatis.generator.codegen.XmlConstants;
 import org.mybatis.generator.codegen.mybatis3.xmlmapper.elements.AbstractXmlElementGenerator;
 import org.mybatis.generator.codegen.mybatis3.xmlmapper.elements.DeleteByPrimaryKeyElementGenerator;
 import org.mybatis.generator.codegen.mybatis3.xmlmapper.elements.InsertElementGenerator;
+import org.mybatis.generator.codegen.mybatis3.xmlmapper.elements.InsertOrUpdateElementGenerator;
 import org.mybatis.generator.codegen.mybatis3.xmlmapper.elements.ResultMapWithoutBLOBsElementGenerator;
 import org.mybatis.generator.codegen.mybatis3.xmlmapper.elements.SimpleSelectAllElementGenerator;
 import org.mybatis.generator.codegen.mybatis3.xmlmapper.elements.SimpleSelectByPrimaryKeyElementGenerator;
@@ -88,6 +89,13 @@ public class SimpleXMLMapperGenerator extends AbstractXmlGenerator {
             initializeAndExecuteGenerator(elementGenerator, parentElement);
         }
     }
+
+	protected void addInsertOrUpdateElement(XmlElement parentElement) {
+		if (introspectedTable.getRules().generateInsert()) {
+			AbstractXmlElementGenerator elementGenerator = new InsertOrUpdateElementGenerator(true);
+			initializeAndExecuteGenerator(elementGenerator, parentElement);
+		}
+	}
 
     protected void addUpdateByPrimaryKeyElement(XmlElement parentElement) {
         if (introspectedTable.getRules().generateUpdateByPrimaryKeySelective()) {
