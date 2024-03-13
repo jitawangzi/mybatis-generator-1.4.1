@@ -29,7 +29,7 @@ import org.mybatis.generator.codegen.mybatis3.MyBatis3FormattingUtilities;
 
 /**
  * 不存在就插入，存在就更新,官方文档不建议同时插多条数据，有潜在风险，暂时只实现单条。
- * @date 2024年3月11日 下午2:56:41
+ * 2024年3月11日 下午2:56:41
  * @author SYQ
  */
 public class InsertOrUpdatePlugin extends PluginAdapter {

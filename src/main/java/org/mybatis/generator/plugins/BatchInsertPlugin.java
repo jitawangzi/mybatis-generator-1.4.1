@@ -53,7 +53,7 @@ public class BatchInsertPlugin extends PluginAdapter {
 		importedTypes.add(FullyQualifiedJavaType.getNewListInstance());
 		importedTypes.add(new FullyQualifiedJavaType(introspectedTable.getBaseRecordType()));
 		FullyQualifiedJavaType ibsreturnType = FullyQualifiedJavaType.getIntInstance();
-		Method batchInsertMethod = new Method("batchInsert");
+		Method batchInsertMethod = new Method("insertBatch");
 		// 1.设置方法可见性
 		batchInsertMethod.setVisibility(JavaVisibility.PUBLIC);
 
@@ -110,7 +110,7 @@ public class BatchInsertPlugin extends PluginAdapter {
 		XmlElement insertBatchElement = new XmlElement("insert");
 		context.getCommentGenerator().addComment(insertBatchElement);
 
-		insertBatchElement.addAttribute(new Attribute("id", "batchInsert"));
+		insertBatchElement.addAttribute(new Attribute("id", "insertBatch"));
 		insertBatchElement.addAttribute(new Attribute("parameterType", "java.util.List"));
 		XmlElement valueTrimElement = new XmlElement("trim");
 		valueTrimElement.addAttribute(new Attribute("prefix", " ("));
