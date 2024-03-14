@@ -31,22 +31,30 @@ public class MyBatis3FormattingUtilities {
     }
 
     public static String getParameterClause(IntrospectedColumn introspectedColumn, String prefix) {
-        StringBuilder sb = new StringBuilder();
 
-        sb.append("#{"); //$NON-NLS-1$
-        sb.append(introspectedColumn.getJavaProperty(prefix));
-        sb.append(",jdbcType="); //$NON-NLS-1$
-        sb.append(introspectedColumn.getJdbcTypeName());
-
-        if (stringHasValue(introspectedColumn.getTypeHandler())) {
-            sb.append(",typeHandler="); //$NON-NLS-1$
-            sb.append(introspectedColumn.getTypeHandler());
-        }
-
-        sb.append('}');
-
-        return sb.toString();
+		return getParameterClause(introspectedColumn, prefix, null);
     }
+
+	public static String getParameterClause(IntrospectedColumn introspectedColumn, String prefix, String item) {
+		StringBuilder sb = new StringBuilder();
+
+		sb.append("#{"); //$NON-NLS-1$
+		if (item != null) {
+			sb.append(item);
+		}
+		sb.append(introspectedColumn.getJavaProperty(prefix));
+		sb.append(",jdbcType="); //$NON-NLS-1$
+		sb.append(introspectedColumn.getJdbcTypeName());
+
+		if (stringHasValue(introspectedColumn.getTypeHandler())) {
+			sb.append(",typeHandler="); //$NON-NLS-1$
+			sb.append(introspectedColumn.getTypeHandler());
+		}
+
+		sb.append('}');
+
+		return sb.toString();
+	}
 
     /**
      * The phrase to use in a select list. If there is a table alias, the value will be

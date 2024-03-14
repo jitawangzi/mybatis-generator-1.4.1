@@ -106,7 +106,7 @@ public class BatchInsertPlugin extends PluginAdapter {
 		for (int i = 0; i < columns.size(); i++) {
 			IntrospectedColumn introspectedColumn = columns.get(i);
 			columnClause.append(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn));
-			valuesClause.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn));
+			valuesClause.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn, null, "item."));
 			if (i + 1 < columns.size()) {
 				columnClause.append(", "); //$NON-NLS-1$
 				valuesClause.append(", "); //$NON-NLS-1$
