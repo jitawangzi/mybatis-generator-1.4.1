@@ -22,6 +22,7 @@ import java.util.TreeSet;
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.PluginAdapter;
+import org.mybatis.generator.api.dom.OutputUtilities;
 import org.mybatis.generator.api.dom.java.FullyQualifiedJavaType;
 import org.mybatis.generator.api.dom.java.Interface;
 import org.mybatis.generator.api.dom.java.JavaVisibility;
@@ -31,6 +32,7 @@ import org.mybatis.generator.api.dom.xml.Attribute;
 import org.mybatis.generator.api.dom.xml.Document;
 import org.mybatis.generator.api.dom.xml.TextElement;
 import org.mybatis.generator.api.dom.xml.XmlElement;
+import org.mybatis.generator.codegen.mybatis3.MyBatis3FormattingUtilities;
 
 public class BatchInsertPlugin extends PluginAdapter {
 	@Override
@@ -71,28 +73,6 @@ public class BatchInsertPlugin extends PluginAdapter {
 		batchInsertMethod.addParameter(new Parameter(paramType, "records"));
 		interfaze.addImportedTypes(importedTypes);
 		interfaze.addMethod(batchInsertMethod);
-
-		/*Method batchInsertSelectiveMethod = new Method("batchInsertSelective");
-		// 1.设置方法可见性
-		batchInsertSelectiveMethod.setVisibility(JavaVisibility.PUBLIC);
-		// 2.设置返回值类型 int类型
-		batchInsertSelectiveMethod.setReturnType(ibsreturnType);
-		// 3.设置方法名
-		//		batchInsertSelectiveMethod.setName("batchInsertSelective");
-
-		batchInsertSelectiveMethod.setAbstract(true);
-		context.getCommentGenerator().addGeneralMethodComment(batchInsertSelectiveMethod, introspectedTable);
-
-		// 4.设置参数列表
-		FullyQualifiedJavaType paramTypeSelective = FullyQualifiedJavaType.getNewListInstance();
-		FullyQualifiedJavaType paramListTypeSelective = new FullyQualifiedJavaType(
-				introspectedTable.getBaseRecordType());
-		paramTypeSelective.addTypeArgument(paramListTypeSelective);
-		batchInsertSelectiveMethod.addParameter(new Parameter(paramTypeSelective, "records", "@Param(\"records\")"));
-		batchInsertSelectiveMethod.addParameter(
-				new Parameter(FullyQualifiedJavaType.getStringInstance(), "columns", "@Param(\"columns\")", true));
-		interfaze.addImportedTypes(importedTypes);
-		interfaze.addMethod(batchInsertSelectiveMethod);*/
 	}
 
 	/**
@@ -101,12 +81,10 @@ public class BatchInsertPlugin extends PluginAdapter {
 	@Override
 	public boolean sqlMapDocumentGenerated(Document document, IntrospectedTable introspectedTable) {
 		addBatchInsertXml(document, introspectedTable);
-//		addBatchInsertSelectiveXml(document, introspectedTable);
 		return true;
 	}
 
 	private void addBatchInsertXml(Document document, IntrospectedTable introspectedTable) {
-		// <insert ...
 		XmlElement insertBatchElement = new XmlElement("insert");
 		context.getCommentGenerator().addComment(insertBatchElement);
 
@@ -121,11 +99,34 @@ public class BatchInsertPlugin extends PluginAdapter {
 		columnTrimElement.addAttribute(new Attribute("suffix", ")"));
 		columnTrimElement.addAttribute(new Attribute("suffixOverrides", ","));
 		List<IntrospectedColumn> columns = introspectedTable.getAllColumns();
-		for (IntrospectedColumn introspectedColumn : columns) {
-			String columnName = introspectedColumn.getActualColumnName();
-			columnTrimElement.addElement(new TextElement(columnName + ","));
-			valueTrimElement.addElement(new TextElement("#{item." + introspectedColumn.getJavaProperty() + ",jdbcType="
-					+ introspectedColumn.getJdbcTypeName() + "},"));
+
+		StringBuilder columnClause = new StringBuilder();
+		StringBuilder valuesClause = new StringBuilder();
+		boolean isEmpty = false;
+		for (int i = 0; i < columns.size(); i++) {
+			IntrospectedColumn introspectedColumn = columns.get(i);
+			columnClause.append(MyBatis3FormattingUtilities.getEscapedColumnName(introspectedColumn));
+			valuesClause.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn));
+			if (i + 1 < columns.size()) {
+				columnClause.append(", "); //$NON-NLS-1$
+				valuesClause.append(", "); //$NON-NLS-1$
+			}
+			isEmpty = false;
+			// 太长了换行
+			if (valuesClause.length() > 80) {
+				columnTrimElement.addElement(new TextElement(columnClause.toString()));
+				columnClause.setLength(0);
+				OutputUtilities.xmlIndent(columnClause, 1);
+
+				valueTrimElement.addElement(new TextElement(valuesClause.toString()));
+				valuesClause.setLength(0);
+				OutputUtilities.xmlIndent(valuesClause, 1);
+				isEmpty = true;
+			}
+		}
+		if (!isEmpty) {
+			columnTrimElement.addElement(new TextElement(columnClause.toString()));
+			valueTrimElement.addElement(new TextElement(valuesClause.toString()));
 		}
 		XmlElement foreachElement = new XmlElement("foreach");
 		foreachElement.addAttribute(new Attribute("collection", "list"));
@@ -136,51 +137,6 @@ public class BatchInsertPlugin extends PluginAdapter {
 				new TextElement("insert into " + introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime()));
 		insertBatchElement.addElement(columnTrimElement);
 		insertBatchElement.addElement(new TextElement(" values "));
-		foreachElement.addElement(valueTrimElement);
-		insertBatchElement.addElement(foreachElement);
-		document.getRootElement().addElement(insertBatchElement);
-	}
-
-	private void addBatchInsertSelectiveXml(Document document, IntrospectedTable introspectedTable) {
-		// <insert ...
-		XmlElement insertBatchElement = new XmlElement("insert");
-		insertBatchElement.addAttribute(new Attribute("id", "batchInsertSelective"));
-		insertBatchElement.addAttribute(new Attribute("parameterType", "map"));
-		XmlElement foreachColumn = new XmlElement("foreach");
-		foreachColumn.addAttribute(new Attribute("collection", "columns"));
-		foreachColumn.addAttribute(new Attribute("index", "index"));
-		foreachColumn.addAttribute(new Attribute("item", "item"));
-		foreachColumn.addAttribute(new Attribute("separator", ","));
-		foreachColumn.addAttribute(new Attribute("open", "("));
-		foreachColumn.addAttribute(new Attribute("close", ")"));
-		foreachColumn.addElement(new TextElement("${item}"));
-		insertBatchElement.addElement(
-				new TextElement("insert into " + introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime()));
-		insertBatchElement.addElement(foreachColumn);
-		insertBatchElement.addElement(new TextElement(" values "));
-		XmlElement valueTrimElement = new XmlElement("trim");
-		valueTrimElement.addAttribute(new Attribute("prefix", " ("));
-		valueTrimElement.addAttribute(new Attribute("suffix", ")"));
-		valueTrimElement.addAttribute(new Attribute("suffixOverrides", ","));
-		XmlElement foreachColumnForValue = new XmlElement("foreach");
-		foreachColumnForValue.addAttribute(new Attribute("collection", "columns"));
-		foreachColumnForValue.addAttribute(new Attribute("index", "index"));
-		foreachColumnForValue.addAttribute(new Attribute("item", "column"));
-		List<IntrospectedColumn> columns = introspectedTable.getAllColumns();
-		for (IntrospectedColumn introspectedColumn : columns) {
-			String javaName = introspectedColumn.getJavaProperty();
-			XmlElement check = new XmlElement("if");
-			check.addAttribute(new Attribute("test", "'" + javaName + "' != null"));
-			check.addElement(new TextElement(
-					"#{record." + javaName + ",jdbcType=" + introspectedColumn.getJdbcTypeName() + "},"));
-			foreachColumnForValue.addElement(check);
-		}
-		valueTrimElement.addElement(foreachColumnForValue);
-		XmlElement foreachElement = new XmlElement("foreach");
-		foreachElement.addAttribute(new Attribute("collection", "records"));
-		foreachElement.addAttribute(new Attribute("index", "index"));
-		foreachElement.addAttribute(new Attribute("item", "record"));
-		foreachElement.addAttribute(new Attribute("separator", ","));
 		foreachElement.addElement(valueTrimElement);
 		insertBatchElement.addElement(foreachElement);
 		document.getRootElement().addElement(insertBatchElement);

@@ -15,12 +15,12 @@
  */
 package org.mybatis.generator.plugins;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.PluginAdapter;
+import org.mybatis.generator.api.dom.OutputUtilities;
 import org.mybatis.generator.api.dom.xml.Attribute;
 import org.mybatis.generator.api.dom.xml.TextElement;
 import org.mybatis.generator.api.dom.xml.XmlElement;
@@ -48,12 +48,11 @@ public class InsertOrUpdatePlugin extends PluginAdapter {
 					StringBuilder updateClause = new StringBuilder();
 					updateClause.append("ON DUPLICATE KEY UPDATE ");
 
-					List<String> valuesClauses = new ArrayList<>();
 					List<IntrospectedColumn> columns = ListUtilities
 							.removeIdentityAndGeneratedAlwaysColumns(introspectedTable.getAllColumns());
+					columns.removeAll(introspectedTable.getPrimaryKeyColumns());
 					for (int i = 0; i < columns.size(); i++) {
 						IntrospectedColumn introspectedColumn = columns.get(i);
-
 						// 过滤不生成update的列
 						if (context.isNotUpdateColumn(introspectedColumn)) {
 							continue;
@@ -68,20 +67,13 @@ public class InsertOrUpdatePlugin extends PluginAdapter {
 						if (i + 1 < columns.size()) {
 							updateClause.append(", "); //$NON-NLS-1$
 						}
-//						if (valuesClause.length() > 80) {
-//							answer.addElement(new TextElement(insertClause.toString()));
-//							insertClause.setLength(0);
-//							OutputUtilities.xmlIndent(insertClause, 1);
-//
-//							valuesClauses.add(valuesClause.toString());
-//							valuesClause.setLength(0);
-//							OutputUtilities.xmlIndent(valuesClause, 1);
-//						}
+						if (updateClause.length() > 80) {
+							element.addElement(new TextElement(updateClause.toString()));
+							updateClause.setLength(0);
+							OutputUtilities.xmlIndent(updateClause, 1);
+						}
 					}
 					element.addElement(new TextElement(updateClause.toString()));
-
-//					valuesClause.append(')');
-//					valuesClauses.add(valuesClause.toString());
 
 					break;
 				}
