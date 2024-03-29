@@ -34,7 +34,7 @@ import org.mybatis.generator.api.dom.xml.XmlElement;
 
 /**
  * 未完成。 批量更新插件，使用;分隔多个语句的方式,先不实现了，shardingsphere不支持
- * @date 2024年3月28日 上午11:07:37
+ * 2024年3月28日 上午11:07:37
  * @author SYQ
  */
 
