@@ -43,6 +43,7 @@
     <plugin type="org.mybatis.generator.plugins.BatchInsertPlugin" />
     <plugin type="org.mybatis.generator.plugins.InsertOrUpdatePlugin" />
     <plugin type="org.mybatis.generator.plugins.BatchDeletePlugin" />
+    <plugin type="org.mybatis.generator.plugins.MysqlBatchUpdatePlugin" />
 
 	<!-- 可以自定义CommentGenerator -->
     <commentGenerator type="org.mybatis.generator.internal.CustomCommentGenerator">
@@ -87,10 +88,8 @@
 
 <!-- 		<table tableName="t_buff"  domainObjectName="Buff" > -->
 <!-- 		</table> -->
-<!-- 		<table tableName="t_player_ext"  domainObjectName="PlayerExt" > -->
-<!-- 		    <blobTransformColumn blobColumn="technology_tree_node" domainObjectFieldType="java.util.HashSet&lt;Integer&gt;" domainObjectFieldName="technology_tree_nodeSet" /> -->
-<!-- 		    <blobTransformColumn blobColumn="main_city_buffs" domainObjectFieldType="java.util.HashSet&lt;Integer&gt;" domainObjectFieldName="main_city_buffsSet" /> -->
-<!-- 		</table> -->
+		<table tableName="t_player_data"  domainObjectName="PlayerData" >
+		</table>
 		<table tableName="t_quest"  domainObjectName="Quest" >
 		</table>
 

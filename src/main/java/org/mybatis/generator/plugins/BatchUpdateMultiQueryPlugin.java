@@ -31,14 +31,14 @@ import org.mybatis.generator.api.dom.xml.Attribute;
 import org.mybatis.generator.api.dom.xml.Document;
 import org.mybatis.generator.api.dom.xml.TextElement;
 import org.mybatis.generator.api.dom.xml.XmlElement;
-import org.mybatis.generator.plugins.util.MBGUtil;
 
 /**
- * 批量删除插件
- * 2024年3月13日 上午10:38:11
+ * 未完成。 批量更新插件，使用;分隔多个语句的方式,先不实现了，shardingsphere不支持
+ * @date 2024年3月28日 上午11:07:37
  * @author SYQ
  */
-public class BatchDeletePlugin extends PluginAdapter {
+
+public class BatchUpdateMultiQueryPlugin extends PluginAdapter {
 	@Override
 	public boolean validate(List<String> list) {
 		return true;
@@ -53,17 +53,17 @@ public class BatchDeletePlugin extends PluginAdapter {
 		if (primaryKeyColumns.isEmpty()) {
 			return true;
 		}
-		addBatchDeleteMethod(interfaze, introspectedTable);
+		addMethod(interfaze, introspectedTable);
 		return true;
 	}
 
-	private void addBatchDeleteMethod(Interface interfaze, IntrospectedTable introspectedTable) {
+	private void addMethod(Interface interfaze, IntrospectedTable introspectedTable) {
 		// 设置需要import的类
 		Set<FullyQualifiedJavaType> importedTypes = new TreeSet<>();
 		importedTypes.add(FullyQualifiedJavaType.getNewListInstance());
 		importedTypes.add(new FullyQualifiedJavaType(introspectedTable.getBaseRecordType()));
 		FullyQualifiedJavaType ibsreturnType = FullyQualifiedJavaType.getIntInstance();
-		Method method = new Method("deleteBatch");
+		Method method = new Method("updateBatchMultiQuery");
 		// 1.设置方法可见性
 		method.setVisibility(JavaVisibility.PUBLIC);
 
@@ -85,15 +85,6 @@ public class BatchDeletePlugin extends PluginAdapter {
 		}
 	}
 
-	protected void addPrimaryKeyMethodParameters(IntrospectedTable introspectedTable,boolean isSimple, Method method,
-			Set<FullyQualifiedJavaType> importedTypes) {
-		if (!isSimple && introspectedTable.getRules().generatePrimaryKeyClass()) {
-			FullyQualifiedJavaType type = new FullyQualifiedJavaType(introspectedTable.getPrimaryKeyType());
-			importedTypes.add(type);
-			method.addParameter(new Parameter(type, "key")); //$NON-NLS-1$
-		} else {
-		}
-	}
 	/**
 	 * 修改Mapper.xml
 	 */
@@ -103,16 +94,18 @@ public class BatchDeletePlugin extends PluginAdapter {
 		if (primaryKeyColumns.isEmpty()) {
 			return true;
 		}
-		addBatchInsertXml(document, introspectedTable);
+		addXml(document, introspectedTable);
 		return true;
 	}
 
-	private void addBatchInsertXml(Document document, IntrospectedTable introspectedTable) {
+	private void addXml(Document document, IntrospectedTable introspectedTable) {
 		// <insert ...
-		XmlElement element = new XmlElement("delete");
+		XmlElement element = new XmlElement("update");
 		context.getCommentGenerator().addComment(element);
-		element.addAttribute(new Attribute("id", "deleteBatch"));
+
+		element.addAttribute(new Attribute("id", "updateBatch"));
 		element.addAttribute(new Attribute("parameterType", "java.util.List"));
+		List<IntrospectedColumn> columns = introspectedTable.getAllColumns();
 		XmlElement foreachElement = new XmlElement("foreach");
 		foreachElement.addAttribute(new Attribute("collection", "list"));
 		foreachElement.addAttribute(new Attribute("index", "index"));
@@ -120,12 +113,50 @@ public class BatchDeletePlugin extends PluginAdapter {
 		foreachElement.addAttribute(new Attribute("open", "("));
 		foreachElement.addAttribute(new Attribute("separator", ","));
 		foreachElement.addAttribute(new Attribute("close", ")"));
-		foreachElement.addElement(new TextElement(MBGUtil.primaryKeyValue(introspectedTable)));
+		foreachElement.addElement(new TextElement(primaryKeyValue(introspectedTable)));
 		element.addElement(new TextElement(
 				"delete from " + introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime() + " where "));
-		element.addElement(new TextElement(MBGUtil.primaryKey(introspectedTable) + " in "));
+		element.addElement(new TextElement(primaryKey(introspectedTable) + " in "));
 		element.addElement(foreachElement);
 		document.getRootElement().addElement(element);
+	}
+
+	private String primaryKey(IntrospectedTable introspectedTable) {
+		List<IntrospectedColumn> primaryKeyColumns = introspectedTable.getPrimaryKeyColumns();
+		if (primaryKeyColumns.size() == 1) {
+			return primaryKeyColumns.get(0).getActualColumnName();
+		} else if (primaryKeyColumns.size() > 1) {
+			StringBuilder sb = new StringBuilder();
+			sb.append("(");
+			for (int i = 0; i < primaryKeyColumns.size(); i++) {
+				sb.append(primaryKeyColumns.get(i).getActualColumnName());
+				if (i != primaryKeyColumns.size() - 1) {
+					sb.append(",");
+				}
+			}
+			sb.append(")");
+			return sb.toString();
+		}
+		return null;
+	}
+
+	private String primaryKeyValue(IntrospectedTable introspectedTable) {
+		List<IntrospectedColumn> primaryKeyColumns = introspectedTable.getPrimaryKeyColumns();
+		if (primaryKeyColumns.size() == 1) {
+			return "#{item." + primaryKeyColumns.get(0).getJavaProperty() + "}";
+		} else if (primaryKeyColumns.size() > 1) {
+			StringBuilder sb = new StringBuilder();
+			sb.append("(");
+			for (int i = 0; i < primaryKeyColumns.size(); i++) {
+				sb.append("#{item." + primaryKeyColumns.get(i).getJavaProperty() + "}");
+				if (i != primaryKeyColumns.size() - 1) {
+					sb.append(",");
+				}
+			}
+			sb.append(")");
+			return sb.toString();
+		}
+		return null;
 	}
 
 }
