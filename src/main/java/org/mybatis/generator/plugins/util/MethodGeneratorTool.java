@@ -29,15 +29,15 @@ import org.mybatis.generator.config.Context;
 
 public class MethodGeneratorTool {
 
-    private final static String BATCH_INSERT = "batchInsert";
+	private final static String BATCH_INSERT = "insertBatch";
 
     private final static String PARAMETER_NAME = "recordList";
 
     private final static String DELETE_PARAMETER_NAME = "ids";
 
-    private final static String BATCH_UPDATE = "batchUpdate";
+	private final static String BATCH_UPDATE = "updateBatch";
 
-    private final static String BATCH_DELETE = "batchDelete";
+	private final static String BATCH_DELETE = "deleteBatch";
 
     public final static Integer INSERT = 0;
 
