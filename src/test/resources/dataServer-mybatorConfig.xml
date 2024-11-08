@@ -37,6 +37,8 @@
 
     <plugin type="org.mybatis.generator.plugins.SerializablePlugin" />
     <plugin type="org.mybatis.generator.plugins.SelectByIndexPlugin" />
+    <plugin type="org.mybatis.generator.plugins.SelectAllPlugin" />
+    <plugin type="org.mybatis.generator.plugins.GetBatchPlugin" />
     <plugin type="org.mybatis.generator.plugins.BlobColumnTransformPlugin" />
     <plugin type="org.mybatis.generator.plugins.DbEntityInterfacePlugin" />
     <plugin type="org.mybatis.generator.plugins.RootClassProtectedFieldPlugin" />

@@ -32,6 +32,11 @@ import org.mybatis.generator.config.xml.ConfigurationParser;
 import org.mybatis.generator.exception.InvalidConfigurationException;
 import org.mybatis.generator.internal.DefaultShellCallback;
 
+/**
+ * 这里启动测试
+ * 2024年11月8日 11:49:42
+ * @author SYQ
+ */
 class MyBatisGeneratorTest {
 
 //    @Test
