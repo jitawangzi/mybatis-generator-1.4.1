@@ -1,5 +1,5 @@
 /*
- *    Copyright 2006-2024 the original author or authors.
+ *    Copyright 2006-2025 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.mybatis.generator.api.IntrospectedColumn;
 import org.mybatis.generator.api.IntrospectedTable;
 import org.mybatis.generator.api.PluginAdapter;
 import org.mybatis.generator.api.dom.java.FullyQualifiedJavaType;
@@ -32,15 +33,15 @@ import org.mybatis.generator.api.dom.xml.TextElement;
 import org.mybatis.generator.api.dom.xml.XmlElement;
 
 /**
- * 分页查询插件
+ * offset实现的分页查询插件
  * 2024年11月8日 12:00:58
  * @author SYQ
  */
-public class GetBatchPlugin extends PluginAdapter {
+public class GetBatchOffsetPlugin extends PluginAdapter {
 
-	private static final String METHOD_NAME = "getBatch";
+	private static final String METHOD_NAME = "getBatchOffset";
 
-	public GetBatchPlugin() {
+	public GetBatchOffsetPlugin() {
 		super();
 	}
 
@@ -49,7 +50,6 @@ public class GetBatchPlugin extends PluginAdapter {
 		return true;
 	}
 
-	// Mapper 接口中生成selectAll方法
 	@Override
 	public boolean clientGenerated(Interface interfaze, IntrospectedTable introspectedTable) {
 		// 方法生成
@@ -95,9 +95,17 @@ public class GetBatchPlugin extends PluginAdapter {
 			select.addAttribute(new Attribute("resultMap", //$NON-NLS-1$
 					introspectedTable.getBaseResultMapId()));
 		}
-
+		List<IntrospectedColumn> primaryKeyColumns = introspectedTable.getPrimaryKeyColumns();
+		String orderBy = " ORDER BY ";
+		for (int i = 0; i < primaryKeyColumns.size(); i++) {
+			IntrospectedColumn introspectedColumn = primaryKeyColumns.get(i);
+			orderBy += introspectedColumn.getActualColumnName() + " ASC";
+			if (i != primaryKeyColumns.size() - 1) {
+				orderBy += ",";
+			}
+		}
 		select.addElement(new TextElement(
-				"SELECT * FROM " + introspectedTable.getFullyQualifiedTableNameAtRuntime() + " LIMIT #{limit} OFFSET #{offset}"));
+				"SELECT * FROM " + introspectedTable.getFullyQualifiedTableNameAtRuntime() + orderBy + " LIMIT #{limit} OFFSET #{offset}"));
 		document.getRootElement().addElement(select);
 		return true;
 	}

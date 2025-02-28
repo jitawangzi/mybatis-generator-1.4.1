@@ -1,5 +1,5 @@
 /*
- *    Copyright 2006-2024 the original author or authors.
+ *    Copyright 2006-2025 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -29,17 +29,19 @@ import org.mybatis.generator.internal.DefaultShellCallback;
  * @author SYQ
  */
 public class MBGTest {
-	public static void main(String[] args) throws Exception {
+	public static void main(String[] args) {
+		try {
+			List<String> warnings = new ArrayList<>();
+			ConfigurationParser cp = new ConfigurationParser(warnings);
+			Configuration config = cp
+					.parseConfiguration(MBGTest.class.getClassLoader().getResourceAsStream("dataServer-mybatorConfig.xml"));
 
-		List<String> warnings = new ArrayList<>();
-		ConfigurationParser cp = new ConfigurationParser(warnings);
-		Configuration config = cp
-				.parseConfiguration(MBGTest.class.getClassLoader().getResourceAsStream("dataServer-mybatorConfig.xml"));
-
-		DefaultShellCallback shellCallback = new DefaultShellCallback(true);
-
-		MyBatisGenerator myBatisGenerator = new MyBatisGenerator(config, shellCallback, warnings);
-		myBatisGenerator.generate(null, null, null, true);
+			DefaultShellCallback shellCallback = new DefaultShellCallback(true);
+			MyBatisGenerator myBatisGenerator = new MyBatisGenerator(config, shellCallback, warnings);
+			myBatisGenerator.generate(null, null, null, true);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 
 		System.out.println("生成完成");
 
