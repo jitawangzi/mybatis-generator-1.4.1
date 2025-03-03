@@ -69,7 +69,8 @@ public class GetBatchCursorPlugin extends PluginAdapter {
 			// 复合主键使用Map参数
 			for (IntrospectedColumn column : primaryKeys) {
 				String paramName = "last" + capitalize(column.getJavaProperty());
-				method.addParameter(new Parameter(column.getFullyQualifiedJavaType(), paramName, "@Param(\"" + paramName + "\")"));
+				method.addParameter(new Parameter(column.getFullyQualifiedJavaType(), paramName,
+						"@Param(\"" + paramName + "\")"));
 			}
 		}
 		method.addParameter(new Parameter(FullyQualifiedJavaType.getIntInstance(), "limit", "@Param(\"limit\")"));
@@ -152,9 +153,13 @@ public class GetBatchCursorPlugin extends PluginAdapter {
 				}
 			}
 			sb.append(") > (");
-			for (IntrospectedColumn column : primaryKeys) {
+			for (int i = 0; i < primaryKeys.size(); i++) {
+				IntrospectedColumn column = primaryKeys.get(i);
 				String paramName = "last" + capitalize(column.getJavaProperty());
 				sb.append("#{").append(paramName).append("}");
+				if (i < primaryKeys.size() - 1) {
+					sb.append(", ");
+				}
 			}
 			sb.append(")");
 		}
