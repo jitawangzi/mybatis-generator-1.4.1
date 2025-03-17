@@ -48,6 +48,7 @@
     <plugin type="org.mybatis.generator.plugins.InsertOrUpdatePlugin" />
     <plugin type="org.mybatis.generator.plugins.BatchDeletePlugin" />
     <plugin type="org.mybatis.generator.plugins.MysqlBatchUpdatePlugin" />
+    <plugin type="org.mybatis.generator.plugins.GetLastIdPlugin" />
 
 	<!-- 可以自定义CommentGenerator -->
     <commentGenerator type="org.mybatis.generator.internal.CustomCommentGenerator">
