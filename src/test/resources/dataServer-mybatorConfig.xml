@@ -31,7 +31,6 @@
      <!-- beginningDelimiter和endingDelimiter：指明数据库的用于标记数据库对象名的符号，比如ORACLE就是双引号，MYSQL默认是`反引号； -->
     <property name="beginningDelimiter" value="`"/>
     <property name="endingDelimiter" value="`"/>
-
 	<!-- xml中生成update语句时，不更新的列。  -->
     <property name="notUpdateColumns" value="player_id"/>
 
@@ -49,6 +48,25 @@
     <plugin type="org.mybatis.generator.plugins.BatchDeletePlugin" />
     <plugin type="org.mybatis.generator.plugins.MysqlBatchUpdatePlugin" />
     <plugin type="org.mybatis.generator.plugins.GetLastIdPlugin" />
+    <plugin type="org.mybatis.generator.plugins.DisableSelectiveMethodPlugin" />
+    <plugin type="org.mybatis.generator.plugins.UpdateWithBlobPlugin" />
+    <!-- 自定义更新插件 -->
+    <plugin type="org.mybatis.generator.plugins.CombinedUpdatePlugin">
+        <!-- 为 t_player_data 表配置自定义更新方法 -->
+        <!-- 更新玩家等级和经验 -->
+        <property name="updateFields.t_player_data.updatePlayerLevelAndExp" value="level,exp" />
+        <!-- 更新玩家名字和头像 -->
+        <property name="updateFields.t_player_data.updatePlayerNameAndHead" value="name,head,headFrame" />
+        <!-- 更新玩家登录信息 -->
+        <property name="updateFields.t_player_data.updatePlayerLoginInfo" value="loginDate,offlineTime,gameTime" />
+        <!-- 更新玩家战力 -->
+        <property name="updateFields.t_player_data.updatePlayerFightPower" value="fightPower,combat" />
+        <!-- 更新单个字段 -->
+        <property name="updateFields.t_player_data.updatePlayerModules" value="modules" />
+    </plugin>
+  <!-- 通用功能插件 - 放在最后 -->
+    <plugin type="org.mybatis.generator.plugins.PrimitiveTypeModelPlugin" />
+    <plugin type="org.mybatis.generator.plugins.PrimitiveTypeClientPlugin" />
 
 	<!-- 可以自定义CommentGenerator -->
     <commentGenerator type="org.mybatis.generator.internal.CustomCommentGenerator">
@@ -61,8 +79,8 @@
 
     <jdbcConnection driverClass="com.mysql.cj.jdbc.Driver" connectionURL="jdbc:mysql://127.0.0.1/game?serverTimezone=Asia/Shanghai" userId="root" password="root" >
     <property name="nullCatalogMeansCurrent" value="true"/>
-</jdbcConnection>
-
+	</jdbcConnection>
+<!-- 	<javaTypeResolver type="org.mybatis.generator.custom.PrimitiveTypeResolver"/> -->
 
 <!--     <javaModelGenerator targetPackage="cn.game.cache.entity" targetProject="Game/src/main/java" > -->
 <!--      在targetPackage的基础上，根据数据库的schema再生成一层package，最终生成的类放在这个package下，默认为false -->
@@ -95,8 +113,8 @@
 <!-- 		</table> -->
 		<table tableName="t_player_data"  domainObjectName="PlayerData" >
 		</table>
-		<table tableName="t_friend"  domainObjectName="Friend" >
-		</table>
+	<table tableName="t_friend"  domainObjectName="Friend">
+	</table>
 
   </context>
 </generatorConfiguration>
