@@ -57,10 +57,17 @@ public class CustomUpdatePlugin extends PluginAdapter {
 		}
     }
 
-    @Override
+	/**
+	 * 获取实际的表名
+	 */
+	private String getActualTableName(IntrospectedTable introspectedTable) {
+		return introspectedTable.getFullyQualifiedTableNameAtRuntime();
+	}
+
+	@Override
 	public boolean sqlMapDocumentGenerated(Document document, IntrospectedTable introspectedTable) {
-		String tableName = introspectedTable.getTableConfiguration().getTableName();
-		List<CustomUpdateConfig> configs = tableUpdateConfigs.get(tableName);
+		String actualTableName = getActualTableName(introspectedTable);
+		List<CustomUpdateConfig> configs = tableUpdateConfigs.get(actualTableName);
 
 		if (configs != null && !configs.isEmpty()) {
 			XmlElement rootElement = document.getRootElement();
@@ -74,12 +81,12 @@ public class CustomUpdatePlugin extends PluginAdapter {
 		}
 
 		return true;
-    }
+	}
 
-    @Override
+	@Override
 	public boolean clientGenerated(Interface interfaze, IntrospectedTable introspectedTable) {
-		String tableName = introspectedTable.getTableConfiguration().getTableName();
-		List<CustomUpdateConfig> configs = tableUpdateConfigs.get(tableName);
+		String actualTableName = getActualTableName(introspectedTable);
+		List<CustomUpdateConfig> configs = tableUpdateConfigs.get(actualTableName);
 
 		if (configs != null && !configs.isEmpty()) {
 			for (CustomUpdateConfig config : configs) {
@@ -92,6 +99,7 @@ public class CustomUpdatePlugin extends PluginAdapter {
 
 		return true;
 	}
+
 
 	private XmlElement generateCustomUpdateXml(CustomUpdateConfig config, IntrospectedTable introspectedTable) {
 		// 验证字段是否存在

@@ -50,20 +50,13 @@
     <plugin type="org.mybatis.generator.plugins.GetLastIdPlugin" />
     <plugin type="org.mybatis.generator.plugins.DisableSelectiveMethodPlugin" />
     <plugin type="org.mybatis.generator.plugins.UpdateWithBlobPlugin" />
-    <!-- 自定义更新插件 -->
-    <plugin type="org.mybatis.generator.plugins.CombinedUpdatePlugin">
-        <!-- 为 t_player_data 表配置自定义更新方法 -->
-        <!-- 更新玩家等级和经验 -->
-        <property name="updateFields.t_player_data.updatePlayerLevelAndExp" value="level,exp" />
-        <!-- 更新玩家名字和头像 -->
-        <property name="updateFields.t_player_data.updatePlayerNameAndHead" value="name,head,headFrame" />
-        <!-- 更新玩家登录信息 -->
-        <property name="updateFields.t_player_data.updatePlayerLoginInfo" value="loginDate,offlineTime,gameTime" />
-        <!-- 更新玩家战力 -->
-        <property name="updateFields.t_player_data.updatePlayerFightPower" value="fightPower,combat" />
-        <!-- 更新单个字段 -->
-        <property name="updateFields.t_player_data.updatePlayerModules" value="modules" />
-    </plugin>
+	<plugin type="org.mybatis.generator.plugins.DynamicUpdatePlugin" />
+
+      	<!-- 自定义更新插件 -->
+	    <plugin type="org.mybatis.generator.plugins.CustomUpdatePlugin">
+	        <!-- 为 t_friend 表配置自定义更新方法 -->
+	        <property name="updateFields.t_friend.updateFriendGifted" value="gifted" />
+	    </plugin>
   <!-- 通用功能插件 - 放在最后 -->
     <plugin type="org.mybatis.generator.plugins.PrimitiveTypeModelPlugin" />
     <plugin type="org.mybatis.generator.plugins.PrimitiveTypeClientPlugin" />
@@ -111,10 +104,15 @@
 
 <!-- 		<table tableName="t_buff"  domainObjectName="Buff" > -->
 <!-- 		</table> -->
+
+		<!-- 生成全部表 ，使用一样的规则 -->
+		<table tableName="%">
+			<domainObjectRenamingRule searchString="^T" replaceString="" />
+		</table>
 		<table tableName="t_player_data"  domainObjectName="PlayerData" >
 		</table>
-	<table tableName="t_friend"  domainObjectName="Friend">
-	</table>
+<!-- 	<table tableName="t_friend"  domainObjectName="Friend"> -->
+<!-- 	</table> -->
 
   </context>
 </generatorConfiguration>
