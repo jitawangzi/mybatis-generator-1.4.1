@@ -1,18 +1,3 @@
-/*
- *    Copyright 2006-2024 the original author or authors.
- *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
- *
- *       http://www.apache.org/licenses/LICENSE-2.0
- *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
- */
 package org.mybatis.generator.plugins;
 
 import static org.mybatis.generator.internal.util.StringUtility.stringHasValue;
@@ -67,11 +52,14 @@ public class SelectByIndexPlugin extends PluginAdapter {
 			Connection connection = context.getConnection();
 			DatabaseMetaData metaData = connection.getMetaData();
 			Map<String, List<IntrospectedColumn>> indexMap = new HashMap<>(5);
+			Map<String, Boolean> uniqueIndexMap = new HashMap<>(5);
 			FullyQualifiedTable fullyQualifiedTable = introspectedTable.getFullyQualifiedTable();
-			ResultSet rs = metaData.getIndexInfo(fullyQualifiedTable.getIntrospectedCatalog(), fullyQualifiedTable
-					.getIntrospectedSchema(), fullyQualifiedTable.getIntrospectedTableName(), false, false);
+
+			ResultSet rs = metaData.getIndexInfo(fullyQualifiedTable.getIntrospectedCatalog(), fullyQualifiedTable.getIntrospectedSchema(),
+					fullyQualifiedTable.getIntrospectedTableName(), false, false);
+
 			while (rs.next()) {
-				// @see https://docs.oracle.com/javase/6/docs/api/java/sql/DatabaseMetaData.html#getColumns(java.lang.String,%20java.lang.String,%20java.lang.String,%20java.lang.String)
+				// 文档参考 DatabaseMetaData.getIndexInfo 返回集
 				String indexName = rs.getString("INDEX_NAME");
 				if ("PRIMARY".equals(indexName)) {
 					continue;
@@ -80,6 +68,8 @@ public class SelectByIndexPlugin extends PluginAdapter {
 				if (!columnOptional.isPresent()) {
 					continue;
 				}
+
+				// 收集列
 				if (indexMap.containsKey(indexName)) {
 					indexMap.get(indexName).add(columnOptional.get());
 				} else {
@@ -87,8 +77,17 @@ public class SelectByIndexPlugin extends PluginAdapter {
 					cols.add(columnOptional.get());
 					indexMap.put(indexName, cols);
 				}
+
+				// 记录唯一性（NON_UNIQUE=false 表示唯一索引）
+				// 如果多行返回（多列索引会多行），只要有一次出现 NON_UNIQUE=false 即为唯一索引
+				boolean nonUnique = rs.getBoolean("NON_UNIQUE");
+				boolean isUnique = !nonUnique;
+				uniqueIndexMap.merge(indexName, isUnique, (oldVal, newVal) -> oldVal || newVal);
 			}
+			rs.close();
+
 			introspectedTable.setAttribute("indexs", indexMap);
+			introspectedTable.setAttribute("uniqueIndexFlags", uniqueIndexMap);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -98,60 +97,98 @@ public class SelectByIndexPlugin extends PluginAdapter {
 	@Override
 	public boolean clientGenerated(Interface interfaze, IntrospectedTable introspectedTable) {
 		@SuppressWarnings("unchecked")
-		Map<String, List<IntrospectedColumn>> indexMap = (Map<String, List<IntrospectedColumn>>) introspectedTable.getAttribute(
-				"indexs");
+		Map<String, List<IntrospectedColumn>> indexMap = (Map<String, List<IntrospectedColumn>>) introspectedTable.getAttribute("indexs");
+		@SuppressWarnings("unchecked")
+		Map<String, Boolean> uniqueIndexMap = (Map<String, Boolean>) introspectedTable.getAttribute("uniqueIndexFlags");
+
+		if (indexMap == null || indexMap.isEmpty()) {
+			return super.clientGenerated(interfaze, introspectedTable);
+		}
+
 		for (Entry<String, List<IntrospectedColumn>> entry : indexMap.entrySet()) {
 			String indexName = entry.getKey();
 			String methodName = getMethodName(indexName);
+
 			// 方法生成
 			Method method = new Method(methodName);
 			method.setVisibility(JavaVisibility.PUBLIC);
-			String returnType = "List<" + introspectedTable.getFullyQualifiedTable().getDomainObjectName() + ">";
-			FullyQualifiedJavaType fqjt = new FullyQualifiedJavaType(returnType);
-			method.setReturnType(fqjt);
+
+			// 判断是否唯一索引
+			boolean isUnique = uniqueIndexMap != null && Boolean.TRUE.equals(uniqueIndexMap.get(indexName));
+
+			// 实体类型
+			String entityTypeName = introspectedTable.getFullyQualifiedTable().getDomainObjectName();
+			FullyQualifiedJavaType entityType = new FullyQualifiedJavaType(entityTypeName);
+
+			// 返回类型
+			FullyQualifiedJavaType returnType;
+			if (isUnique) {
+				// 唯一索引返回单对象
+				returnType = entityType;
+			} else {
+				// 非唯一索引返回 List<实体>
+				returnType = FullyQualifiedJavaType.getNewListInstance();
+				returnType.addTypeArgument(entityType);
+			}
+			method.setReturnType(returnType);
 			method.setAbstract(true);
+
+			// 参数
 			List<IntrospectedColumn> columns = entry.getValue();
-			List<Parameter> parameters = columns.stream().map(it -> new Parameter(it.getFullyQualifiedJavaType(), it.getJavaProperty(),
-					"@Param(\"" + it.getJavaProperty() + "\")")).collect(Collectors.toList());
+			List<Parameter> parameters = columns.stream()
+					.map(it -> new Parameter(it.getFullyQualifiedJavaType(), it.getJavaProperty(),
+							"@Param(\"" + it.getJavaProperty() + "\")"))
+					.collect(Collectors.toList());
 			for (Parameter para : parameters) {
 				method.addParameter(para);
 			}
-			// 注释生成
+
+			// 注释
 			context.getCommentGenerator().addGeneralMethodComment(method, introspectedTable);
 			interfaze.addMethod(method);
-//			interfaze.addStaticImport("org.apache.ibatis.annotations.Param");
-			Set<FullyQualifiedJavaType> importedTypes = new TreeSet<>();
-			importedTypes.add(new FullyQualifiedJavaType("org.apache.ibatis.annotations.Param")); //$NON-NLS-1$
-			importedTypes.add(new FullyQualifiedJavaType("java.util.List")); //$NON-NLS-1$
-			interfaze.addImportedTypes(importedTypes);
 
+			// 导入
+			Set<FullyQualifiedJavaType> importedTypes = new TreeSet<>();
+			importedTypes.add(new FullyQualifiedJavaType("org.apache.ibatis.annotations.Param"));
+			if (!isUnique) {
+				importedTypes.add(new FullyQualifiedJavaType("java.util.List"));
+			}
+			// 如果实体是全限定名才需要导入，这里通常由 MBG 管理，此处无需重复导入
+			interfaze.addImportedTypes(importedTypes);
 		}
 		return super.clientGenerated(interfaze, introspectedTable);
 	}
+
 	// mapper.xml中生成select方法
 	@Override
 	public boolean sqlMapDocumentGenerated(Document document, IntrospectedTable introspectedTable) {
 
 		@SuppressWarnings("unchecked")
-		Map<String, List<IntrospectedColumn>> indexMap = (Map<String, List<IntrospectedColumn>>) introspectedTable.getAttribute(
-				"indexs");
+		Map<String, List<IntrospectedColumn>> indexMap = (Map<String, List<IntrospectedColumn>>) introspectedTable.getAttribute("indexs");
+		@SuppressWarnings("unchecked")
+		Map<String, Boolean> uniqueIndexMap = (Map<String, Boolean>) introspectedTable.getAttribute("uniqueIndexFlags");
+
+		if (indexMap == null || indexMap.isEmpty()) {
+			return true;
+		}
+
 		for (Entry<String, List<IntrospectedColumn>> entry : indexMap.entrySet()) {
 			String indexName = entry.getKey();
 			String methodName = getMethodName(indexName);
 			List<IntrospectedColumn> columns = entry.getValue();
+			boolean isUnique = uniqueIndexMap != null && Boolean.TRUE.equals(uniqueIndexMap.get(indexName));
 
 			// 生成查询语句
 			XmlElement select = new XmlElement("select");
 			context.getCommentGenerator().addComment(select);
 			// 添加ID
 			select.addAttribute(new Attribute("id", methodName));
-			// 添加返回类型
+
+			// 返回映射（继续沿用 resultMap，接口返回单对象时 MyBatis 会映射成一个对象）
 			if (introspectedTable.hasBLOBColumns()) {
-				select.addAttribute(new Attribute("resultMap", //$NON-NLS-1$
-						introspectedTable.getResultMapWithBLOBsId()));
+				select.addAttribute(new Attribute("resultMap", introspectedTable.getResultMapWithBLOBsId()));
 			} else {
-				select.addAttribute(new Attribute("resultMap", //$NON-NLS-1$
-						introspectedTable.getBaseResultMapId()));
+				select.addAttribute(new Attribute("resultMap", introspectedTable.getBaseResultMapId()));
 			}
 
 			// 添加参数类型
@@ -159,9 +196,7 @@ public class SelectByIndexPlugin extends PluginAdapter {
 			if (columns.size() == 1) {
 				parameterType = columns.get(0).getFullyQualifiedJavaType().getFullyQualifiedName();
 			} else {
-				// PK fields are in the base class. If more than on PK
-				// field, then they are coming in a map.
-				parameterType = "map"; //$NON-NLS-1$
+				parameterType = "map";
 			}
 			select.addAttribute(new Attribute("parameterType", parameterType));
 			select.addElement(new TextElement("select"));
@@ -172,32 +207,34 @@ public class SelectByIndexPlugin extends PluginAdapter {
 				sb.append(introspectedTable.getSelectByExampleQueryId());
 				sb.append("' as QUERYID,");
 			}
-			select.addElement(new TextElement(sb.toString()));
+			if (sb.length() > 0) {
+				select.addElement(new TextElement(sb.toString()));
+			}
 
-			XmlElement base = new XmlElement("include"); //$NON-NLS-1$
-			base.addAttribute(new Attribute("refid", //$NON-NLS-1$
-					introspectedTable.getBaseColumnListId()));
-
+			XmlElement base = new XmlElement("include");
+			base.addAttribute(new Attribute("refid", introspectedTable.getBaseColumnListId()));
 			select.addElement(base);
 
 			if (introspectedTable.hasBLOBColumns()) {
-				select.addElement(new TextElement(",")); //$NON-NLS-1$
-
-				XmlElement blob = new XmlElement("include"); //$NON-NLS-1$
-				blob.addAttribute(new Attribute("refid", //$NON-NLS-1$
-						introspectedTable.getBlobColumnListId()));
-
+				select.addElement(new TextElement(","));
+				XmlElement blob = new XmlElement("include");
+				blob.addAttribute(new Attribute("refid", introspectedTable.getBlobColumnListId()));
 				select.addElement(blob);
 			}
-			// 添加from tableName
+
+			// from
 			sb.setLength(0);
 			sb.append("from ");
 			sb.append(introspectedTable.getAliasedFullyQualifiedTableNameAtRuntime());
 			select.addElement(new TextElement(sb.toString()));
-			// 添加where语句
+
+			// where
 			for (VisitableElement where : generateWheres(columns)) {
 				select.addElement(where);
 			}
+
+			// 若担心历史数据不唯一，可按需打开下一行强制限制只取一行
+			// if (isUnique) { select.addElement(new TextElement("limit 1")); }
 
 			addElementWithBestPosition(document.getRootElement(), select);
 		}
@@ -207,16 +244,20 @@ public class SelectByIndexPlugin extends PluginAdapter {
 	private String getMethodName(String indexName) {
 		return "selectBy" + makeIndex(indexName);
 	}
+
 	private String makeIndex(String name) {
 		String indexName = name.replace("idx_", "");
 		return upperIndex(indexName);
 	}
+
 	private String upperIndex(String name) {
 		String[] split = name.split("_");
 		String ret = "";
 		for (int i = 0; i < split.length; i++) {
 			char[] arr = split[i].toCharArray();
-			arr[0] = Character.toUpperCase(arr[0]);
+			if (arr.length > 0) {
+				arr[0] = Character.toUpperCase(arr[0]);
+			}
 			ret += new String(arr);
 		}
 		return ret.length() == 0 ? name : ret;
@@ -230,14 +271,14 @@ public class SelectByIndexPlugin extends PluginAdapter {
 		for (IntrospectedColumn introspectedColumn : uniqueKey) {
 			sb.setLength(0);
 			if (and) {
-				sb.append("  and "); //$NON-NLS-1$
+				sb.append("  and ");
 			} else {
-				sb.append("where "); //$NON-NLS-1$
+				sb.append("where ");
 				and = true;
 			}
 
 			sb.append(MyBatis3FormattingUtilities.getAliasedEscapedColumnName(introspectedColumn));
-			sb.append(" = "); //$NON-NLS-1$
+			sb.append(" = ");
 			sb.append(MyBatis3FormattingUtilities.getParameterClause(introspectedColumn));
 			answer.add(new TextElement(sb.toString()));
 		}
@@ -293,6 +334,7 @@ public class SelectByIndexPlugin extends PluginAdapter {
 			}
 		}
 	}
+
 	/**
 	 * 找出节点ID值
 	 *
