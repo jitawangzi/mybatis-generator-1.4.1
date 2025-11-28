@@ -26,15 +26,16 @@ public class InsertOrUpdatePlugin extends PluginAdapter {
 	}
 
 	/**
-	 * 生成 Java 接口方法
+	 * 1. 生成 Java 接口方法
+	 * 保持 abstract = true，确保生成 interface 方法时不带大括号
 	 */
 	@Override
 	public boolean clientGenerated(Interface interfaze, IntrospectedTable introspectedTable) {
 		Method method = new Method("insertOrUpdate");
 		method.setVisibility(JavaVisibility.PUBLIC);
 		method.setReturnType(FullyQualifiedJavaType.getIntInstance());
+		method.setAbstract(true); // 关键：生成抽象方法
 
-		// 计算参数类型
 		FullyQualifiedJavaType parameterType = introspectedTable.getRules().calculateAllFieldsClass();
 		method.addParameter(new Parameter(parameterType, "record"));
 
@@ -44,81 +45,83 @@ public class InsertOrUpdatePlugin extends PluginAdapter {
 	}
 
 	/**
-	 * 生成 XML SQL 语句
+	 * 2. 生成 XML SQL
+	 * 修复策略：
+	 * - 使用列名(ColumnName)对比来排除主键，避免对象引用问题。
+	 * - 分段生成 TextElement，确保逻辑清晰，不丢失片段。
 	 */
 	@Override
 	public boolean sqlMapDocumentGenerated(Document document, IntrospectedTable introspectedTable) {
-		XmlElement root = document.getRootElement();
-
-		// 1. 创建 XML 节点 <insert id="insertOrUpdate" ...>
 		XmlElement answer = new XmlElement("insert");
 		answer.addAttribute(new Attribute("id", "insertOrUpdate"));
+
 		FullyQualifiedJavaType parameterType = introspectedTable.getRules().calculateAllFieldsClass();
 		answer.addAttribute(new Attribute("parameterType", parameterType.getFullyQualifiedName()));
 
 		context.getCommentGenerator().addComment(answer);
 
-		// 2. 准备所有列
 		List<IntrospectedColumn> allColumns = introspectedTable.getAllColumns();
 		List<IntrospectedColumn> pkColumns = introspectedTable.getPrimaryKeyColumns();
 
-		// 3. 构建 insert into (...) 部分
+		// --- 第一部分：insert into 表名 (列...) ---
 		StringBuilder insertClause = new StringBuilder();
 		insertClause.append("insert into ");
 		insertClause.append(introspectedTable.getFullyQualifiedTableNameAtRuntime());
 		insertClause.append(" (");
 
-		// 4. 构建 values (...) 部分
-		StringBuilder valuesClause = new StringBuilder();
-		valuesClause.append("values (");
-
 		Iterator<IntrospectedColumn> iter = allColumns.iterator();
 		while (iter.hasNext()) {
 			IntrospectedColumn col = iter.next();
-
 			insertClause.append(MyBatis3FormattingUtilities.getEscapedColumnName(col));
-			valuesClause.append(MyBatis3FormattingUtilities.getParameterClause(col));
-
 			if (iter.hasNext()) {
 				insertClause.append(", ");
-				valuesClause.append(", ");
 			}
 		}
 		insertClause.append(")");
-		valuesClause.append(")");
-
-		// 添加 insert 和 values 文本节点
 		answer.addElement(new TextElement(insertClause.toString()));
+
+		// --- 第二部分：values (参数...) ---
+		StringBuilder valuesClause = new StringBuilder();
+		valuesClause.append("values (");
+
+		iter = allColumns.iterator();
+		while (iter.hasNext()) {
+			IntrospectedColumn col = iter.next();
+			valuesClause.append(MyBatis3FormattingUtilities.getParameterClause(col));
+			if (iter.hasNext()) {
+				valuesClause.append(", ");
+			}
+		}
+		valuesClause.append(")");
 		answer.addElement(new TextElement(valuesClause.toString()));
 
-		// 5. 【核心修复】手动计算需要更新的列（排除主键）
-		// 不再使用 getNonPrimaryKeyColumns()，防止因驱动差异导致返回空列表
-		List<IntrospectedColumn> columnsToUpdate = new ArrayList<>();
-
+		// --- 第三部分：on duplicate key update ... ---
+		// 1. 筛选出非主键的列
+		List<IntrospectedColumn> updateColumns = new ArrayList<>();
 		for (IntrospectedColumn col : allColumns) {
-			boolean isPk = false;
+			boolean isKey = false;
 			for (IntrospectedColumn pk : pkColumns) {
-				// 忽略大小写对比列名，确保万无一失
-				if (col.getActualColumnName().equalsIgnoreCase(pk.getActualColumnName())) {
-					isPk = true;
+				// 使用实际列名进行比较，这是最安全的做法
+				if (col.getActualColumnName().equals(pk.getActualColumnName())) {
+					isKey = true;
 					break;
 				}
 			}
-			// 只要不是主键，就加入更新列表
-			if (!isPk) {
-				columnsToUpdate.add(col);
+			if (!isKey) {
+				updateColumns.add(col);
 			}
 		}
 
-		// 6. 构建 on duplicate key update ... 部分
-		if (!columnsToUpdate.isEmpty()) {
+		// 2. 如果有可更新的列，生成 update 语句
+		if (!updateColumns.isEmpty()) {
 			StringBuilder updateClause = new StringBuilder();
 			updateClause.append("on duplicate key update ");
 
-			Iterator<IntrospectedColumn> updateIter = columnsToUpdate.iterator();
+			Iterator<IntrospectedColumn> updateIter = updateColumns.iterator();
 			while (updateIter.hasNext()) {
 				IntrospectedColumn col = updateIter.next();
 
+				// 格式：column = #{column}
 				updateClause.append(MyBatis3FormattingUtilities.getEscapedColumnName(col));
 				updateClause.append(" = ");
 				updateClause.append(MyBatis3FormattingUtilities.getParameterClause(col));
@@ -127,11 +130,11 @@ public class InsertOrUpdatePlugin extends PluginAdapter {
 					updateClause.append(", ");
 				}
 			}
-			// 添加 update 文本节点
 			answer.addElement(new TextElement(updateClause.toString()));
 		}
 
-		root.addElement(answer);
+		document.getRootElement().addElement(answer);
+
 		return true;
 	}
 }
