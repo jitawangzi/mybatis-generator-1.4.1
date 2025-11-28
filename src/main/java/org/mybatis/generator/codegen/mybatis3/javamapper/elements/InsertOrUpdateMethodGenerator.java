@@ -15,22 +15,20 @@
  */
 package org.mybatis.generator.codegen.mybatis3.javamapper.elements;
 
-import org.mybatis.generator.api.dom.java.Interface;
-
 public class InsertOrUpdateMethodGenerator extends InsertMethodGenerator {
 
     public InsertOrUpdateMethodGenerator(boolean isSimple) {
         super(isSimple);
     }
 
-    @Override
-    public void addInterfaceElements(Interface interfaze) {
-		String defaultInsertName = introspectedTable.getInsertStatementId();
-		introspectedTable.setInsertStatementId("insertOrUpdate");
-
-		super.addInterfaceElements(interfaze);
-
-		introspectedTable.setInsertStatementId(defaultInsertName);
-
-    }
+//    @Override
+//    public void addInterfaceElements(Interface interfaze) {
+//		String defaultInsertName = introspectedTable.getInsertStatementId();
+//		introspectedTable.setInsertStatementId("insertOrUpdate");
+//
+//		super.addInterfaceElements(interfaze);
+//
+//		introspectedTable.setInsertStatementId(defaultInsertName);
+//
+//    }
 }
