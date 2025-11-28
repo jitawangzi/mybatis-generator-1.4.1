@@ -110,7 +110,7 @@
 		<table tableName="%">
 			<domainObjectRenamingRule searchString="^T" replaceString="" />
 		</table>
-		<table tableName="t_player_data"  domainObjectName="PlayerData" >
+		<table tableName="t_user_server"  domainObjectName="UserServer" >
 		</table>
 <!-- 	<table tableName="t_friend"  domainObjectName="Friend"> -->
 <!-- 	</table> -->
