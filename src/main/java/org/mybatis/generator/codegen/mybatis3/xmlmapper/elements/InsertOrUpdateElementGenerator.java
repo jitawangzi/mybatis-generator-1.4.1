@@ -15,20 +15,22 @@
  */
 package org.mybatis.generator.codegen.mybatis3.xmlmapper.elements;
 
+import org.mybatis.generator.api.dom.xml.XmlElement;
+
 public class InsertOrUpdateElementGenerator extends InsertElementGenerator {
 
     public InsertOrUpdateElementGenerator(boolean isSimple) {
 		super(isSimple);
     }
 
-//    @Override
-//    public void addElements(XmlElement parentElement) {
-//
-//		String defaultInsertName = introspectedTable.getInsertStatementId();
-//		introspectedTable.setInsertStatementId("insertOrUpdate");
-//
-//		super.addElements(parentElement);
-//
-//		introspectedTable.setInsertStatementId(defaultInsertName);
-//	}
+	@Override
+	public void addElements(XmlElement parentElement) {
+
+		String defaultInsertName = introspectedTable.getInsertStatementId();
+		introspectedTable.setInsertStatementId("insertOrUpdate");
+
+		super.addElements(parentElement);
+
+		introspectedTable.setInsertStatementId(defaultInsertName);
+	}
 }

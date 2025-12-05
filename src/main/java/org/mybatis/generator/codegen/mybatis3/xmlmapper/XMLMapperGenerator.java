@@ -73,7 +73,7 @@ public class XMLMapperGenerator extends AbstractXmlGenerator {
         addDeleteByExampleElement(answer);
         addInsertElement(answer);
         addInsertSelectiveElement(answer);
-		addInsertOrUpdateElement(answer);
+//		addInsertOrUpdateElement(answer);
         addCountByExampleElement(answer);
         addUpdateByExampleSelectiveElement(answer);
         addUpdateByExampleWithBLOBsElement(answer);
