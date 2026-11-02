@@ -1,5 +1,5 @@
 /*
- *    Copyright 2006-2024 the original author or authors.
+ *    Copyright 2006-2026 the original author or authors.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -35,14 +35,12 @@ public class DefaultShellCallback implements ShellCallback {
     @Override
     public File getDirectory(String targetProject, String targetPackage)
             throws ShellException {
-        // targetProject is interpreted as a directory that must exist
-        //
-        // targetPackage is interpreted as a sub directory, but in package
-        // format (with dots instead of slashes). The sub directory will be
-        // created
-        // if it does not already exist
-
+        // targetProject is interpreted as a directory that must exist.
+        // If it doesn't exist, try to create it.
         File project = new File(targetProject);
+        if (!project.exists()) {
+            project.mkdirs();
+        }
         if (!project.isDirectory()) {
             throw new ShellException(getString("Warning.9", //$NON-NLS-1$
                     targetProject));
